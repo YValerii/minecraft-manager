@@ -1,8 +1,6 @@
 export const uk = {
   langSwitcher: {
     ariaLabel: 'Мова',
-    en: 'EN',
-    uk: 'UA',
   },
   app: {
     sectionsAriaLabel: 'Розділи',

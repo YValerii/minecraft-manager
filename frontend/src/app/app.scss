@@ -16,9 +16,9 @@
     padding: 0 20px;
     display: flex;
     align-items: stretch;
-    gap: 22px;
+    flex-wrap: wrap;
+    gap: 0 14px;
     min-height: 56px;
-    overflow-x: auto;
   }
 }
 
@@ -50,6 +50,7 @@
 .tabs {
   display: flex;
   align-items: stretch;
+  flex-wrap: wrap;
   gap: 2px;
   flex: 1;
 }
@@ -58,7 +59,8 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 0 12px;
+  min-height: 48px;
+  padding: 0 10px;
   color: var(--muted);
   border-bottom: 2px solid transparent;
   white-space: nowrap;
@@ -77,30 +79,20 @@
   }
 }
 
-.lang-switch {
-  display: flex;
-  align-items: center;
-  gap: 2px;
+select.lang-switch {
+  width: auto;
   align-self: center;
-  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 8px;
   border-radius: 6px;
-  padding: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
 
-  button {
-    padding: 4px 9px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--muted);
-    background: transparent;
-
-    &:hover {
-      color: var(--text);
-    }
-    &.on {
-      color: var(--text);
-      background: var(--accent);
-    }
+  option {
+    color: var(--text);
+    background: var(--panel);
   }
 }
 
@@ -108,4 +100,14 @@
   max-width: 1180px;
   margin: 0 auto;
   padding: 24px 20px 64px;
+}
+
+@media (max-width: 700px) {
+  .topbar {
+    position: static;
+  }
+  .tabs {
+    order: 1;
+    flex-basis: 100%;
+  }
 }

@@ -34,7 +34,14 @@
       }
     ],
     "win": {
-      "target": "nsis"
+      "target": [
+        "nsis",
+        "msi"
+      ]
+    },
+    "msi": {
+      "oneClick": false,
+      "perMachine": false
     },
     "nsis": {
       "oneClick": false,

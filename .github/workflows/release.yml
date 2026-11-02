@@ -64,12 +64,32 @@ jobs:
         working-directory: desktop
         run: npm run smoke
 
+      - name: Install, launch and uninstall the MSI
+        if: runner.os == 'Windows'
+        working-directory: desktop
+        shell: pwsh
+        run: |
+          $msi = (Get-ChildItem dist/*.msi).FullName
+          $install = Start-Process msiexec -ArgumentList "/i `"$msi`" /qn /l*v msi-install.log" -Wait -PassThru
+          if ($install.ExitCode -ne 0) { Get-Content msi-install.log -Tail 40; throw "Install failed: $($install.ExitCode)" }
+
+          $exe = "$env:LOCALAPPDATA\Programs\Minecraft Manager\Minecraft Manager.exe"
+          if (-not (Test-Path $exe)) { throw "Not installed at $exe" }
+          $env:MCM_SMOKE_TEST = '1'
+          $run = Start-Process $exe -Wait -PassThru
+          if ($run.ExitCode -ne 0) { throw "Installed app failed: $($run.ExitCode)" }
+
+          $remove = Start-Process msiexec -ArgumentList "/x `"$msi`" /qn" -Wait -PassThru
+          if ($remove.ExitCode -ne 0) { throw "Uninstall failed: $($remove.ExitCode)" }
+          if (Test-Path $exe) { throw "Still present after uninstall" }
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
           if-no-files-found: error
           path: |
             desktop/dist/*.exe
+            desktop/dist/*.msi
             desktop/dist/*.dmg
             desktop/dist/*.AppImage
             desktop/dist/*.deb

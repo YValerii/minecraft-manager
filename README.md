@@ -15,7 +15,7 @@ Install it like any other app. Java, Docker and a database are not needed. Get t
 
 | System | File |
 |---|---|
-| Windows 10/11 | `minecraft-manager-<version>-win-x64.exe` |
+| Windows 10/11 | `minecraft-manager-<version>-win-x64.msi` or `minecraft-manager-<version>-win-x64.exe` |
 | macOS, Apple Silicon | `minecraft-manager-<version>-mac-arm64.dmg` |
 | macOS, Intel | `minecraft-manager-<version>-mac-x64.dmg` |
 | Linux | `minecraft-manager-<version>-linux-x86_64.AppImage` or `minecraft-manager-<version>-linux-amd64.deb` |

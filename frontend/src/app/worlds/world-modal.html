@@ -1,0 +1,70 @@
+<div class="backdrop" (click)="onBackdrop($event)" role="presentation">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="world-title">
+    <header class="head">
+      <div class="thumb">
+        @if (!iconBroken()) {
+          <img class="pixel" [src]="iconUrl()" alt="" (error)="iconBroken.set(true)" />
+        } @else {
+          <span aria-hidden="true">🌍</span>
+        }
+      </div>
+      <div class="titles">
+        <h2 id="world-title">{{ details()?.summary?.name ?? folder() }}</h2>
+        @if (details(); as d) {
+          <p>
+            <span class="ver">{{ d.summary.versionName ?? i18n.t('worldModal.unknownVersion') }}</span>
+            @if (d.summary.hardcore) {
+              <span class="badge danger">Hardcore</span>
+            }
+          </p>
+        }
+      </div>
+      <button class="btn small close" type="button" (click)="close()" [attr.aria-label]="i18n.t('worldModal.closeAria')">✕</button>
+    </header>
+
+    <div class="scroll">
+      @if (loading()) {
+        <div class="state"><span class="spin"></span> {{ i18n.t('worldModal.loadingLevelDat') }}</div>
+      } @else if (error(); as e) {
+        <div class="banner error">{{ e }}</div>
+      } @else {
+        @for (s of sections(); track s.title) {
+          <section>
+            <h3>{{ s.title }}</h3>
+            <dl>
+              @for (r of s.rows; track r.label) {
+                <div class="row">
+                  <dt>{{ r.label }}</dt>
+                  <dd>{{ r.value }}</dd>
+                </div>
+              }
+            </dl>
+          </section>
+        }
+
+        @if (gameRules().length > 0) {
+          <section>
+            <h3>{{ i18n.t('worldModal.gameRulesHeading', { count: gameRules().length }) }}</h3>
+            <div class="rules">
+              @for (g of gameRules(); track g.name) {
+                <div class="rule">
+                  <code>{{ g.name }}</code>
+                  <span class="badge" [class.ok]="g.value === 'true'" [class.danger]="g.value === 'false'">{{ g.value }}</span>
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+        <details class="raw" (toggle)="onRawToggle($event)">
+          <summary>{{ i18n.t('worldModal.allDataSummary') }}</summary>
+          @if (rawLoading()) {
+            <p class="state"><span class="spin"></span> {{ i18n.t('worldModal.loadingRaw') }}</p>
+          } @else if (raw(); as r) {
+            <pre>{{ r }}</pre>
+          }
+        </details>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,25 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: minecraft-manager
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/mcmanager}
+    username: ${DB_USER:mcmanager}
+    password: ${DB_PASSWORD:mcmanager}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+
+# Initial values. After the first run, settings live in the DB
+# and are changed on the "Settings" page.
+app:
+  # Empty = %APPDATA%\.minecraft (Windows) or ~/.minecraft
+  minecraft-path: ${APP_MINECRAFT_PATH:}
+  game-version: ${APP_GAME_VERSION:26.3}
+  loader: ${APP_LOADER:neoforge}
+  provider: ${APP_PROVIDER:MODRINTH}
+  curseforge-api-key: ${CURSEFORGE_API_KEY:}
+  cache-ttl-minutes: 60

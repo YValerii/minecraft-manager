@@ -1,0 +1,26 @@
+<header class="topbar">
+  <div class="inner">
+    <a class="brand" routerLink="/">
+      <span class="logo" aria-hidden="true"></span>
+      <span>Minecraft Manager</span>
+    </a>
+    <nav class="tabs" [attr.aria-label]="i18n.t('app.sectionsAriaLabel')">
+      @for (tab of tabs; track tab.link) {
+        <a class="tab" [routerLink]="tab.link" routerLinkActive="active">
+          <span class="emoji" aria-hidden="true">{{ tab.emoji }}</span>{{ i18n.t(tab.labelKey) }}
+        </a>
+      }
+    </nav>
+    <a class="tab settings" routerLink="/settings" routerLinkActive="active">
+      <span class="emoji" aria-hidden="true">⚙️</span>{{ i18n.t('app.settingsLink') }}
+    </a>
+    <div class="lang-switch" role="group" [attr.aria-label]="i18n.t('langSwitcher.ariaLabel')">
+      <button type="button" [class.on]="i18n.lang() === 'en'" (click)="setLang('en')">{{ i18n.t('langSwitcher.en') }}</button>
+      <button type="button" [class.on]="i18n.lang() === 'uk'" (click)="setLang('uk')">{{ i18n.t('langSwitcher.uk') }}</button>
+    </div>
+  </div>
+</header>
+
+<main class="content">
+  <router-outlet />
+</main>

@@ -1,0 +1,96 @@
+# Minecraft Manager
+
+*Читати іншою мовою: [English](README.md)*
+
+Веб-застосунок, який показує все, що встановлено у вашому Minecraft, підтягує назви, іконки та версії з Modrinth (або CurseForge) і оновлює моди, ресурс паки, шейдери та датапаки однією кнопкою.
+
+- **Backend:** Spring Boot 3.5, Java 21, PostgreSQL
+- **Frontend:** Angular 21 (standalone, signals, zoneless)
+- **Запуск:** Docker Compose, одна команда
+
+## Запуск
+
+```bash
+docker compose up --build
+```
+
+Відкрийте http://localhost:4200.
+
+За замовчуванням у контейнер монтується `%APPDATA%\.minecraft` (Windows). На іншій ОС або з нестандартним розташуванням задайте папку в `.env` (шаблон у `.env.example`):
+
+```env
+MINECRAFT_DIR=C:/Users/Ім'я/AppData/Roaming/.minecraft
+# Linux:  MINECRAFT_DIR=/home/user/.minecraft
+# macOS:  MINECRAFT_DIR=/Users/user/Library/Application Support/minecraft
+```
+
+Папка монтується з правом запису, інакше оновлення неможливі.
+
+## Можливості
+
+| Вкладка | Що показує |
+|---|---|
+| Моди | `mods/*.jar` |
+| Ресурс паки | `resourcepacks/*.zip` і папки |
+| Датапаки | `datapacks/` та `saves/<світ>/datapacks/` (з позначкою світу) |
+| Шейдери | `shaderpacks/*.zip` і папки |
+| Світи | плитки з іконкою, назвою, версією гри; клік відкриває модалку з даними з `level.dat` |
+| Налаштування | шлях до Minecraft, папки, версія гри, лоадер, джерело (Modrinth / CurseForge), ключ CurseForge |
+
+Значення за замовчуванням: Minecraft **26.3**, лоадер **neoforge**, джерело **Modrinth**. Усе змінюється на сторінці «Налаштування».
+
+### Як розпізнаються файли
+
+Файл ідентифікується за хешем, а не за назвою. Для Modrinth використовується SHA-1, для CurseForge фінгерпринт murmur2. Тому назва файлу може бути будь-якою. З сайту береться коректна назва, опис, іконка та поточна версія. Результат кешується в Postgres.
+
+Якщо файл на сайті не знайдено (власна збірка, папка-пак), показуються дані, прочитані з самого файлу: `neoforge.mods.toml`, `mods.toml`, `fabric.mod.json`, `quilt.mod.json`, `mcmod.info`, `pack.mcmeta` та `pack.png`. Такий елемент позначається як «Не розпізнано».
+
+### Оновлення
+
+Оновлення шукається для налаштованих версії гри та лоадера. Кнопка «Оновити» виконує такі кроки:
+
+1. Завантажує нову версію у тимчасовий `.part` файл.
+2. Перевіряє контрольну суму (SHA-512 для Modrinth, SHA-1 для CurseForge).
+3. Переносить старий файл у `.minecraft/.mc-manager-backup/<тип>/<дата-час>/`.
+4. Кладе новий файл на його місце.
+
+Є також «Оновити все». Закрийте гру перед оновленням.
+
+Для CurseForge потрібен безкоштовний API-ключ (https://console.curseforge.com). Деякі автори забороняють завантаження через API, і тоді застосунок пробує публічний CDN. Якщо й це не спрацює, файл треба завантажити вручну.
+
+### Дані зі світу (`level.dat`)
+
+Показуються назва, версія гри та Data version, режим, складність, hardcore, команди, seed, спавн, ігровий час, погода, гравець, виміри, датапаки, ігрові правила, розмір на диску. Нижче є розділ «Усі дані level.dat», де завантажується повне NBT-дерево. Парсер толерантний до різних версій формату: якщо поля немає, воно просто не показується.
+
+## Розробка без Docker
+
+```bash
+# Postgres, наприклад:
+docker run -d --name mcdb -e POSTGRES_DB=mcmanager -e POSTGRES_USER=mcmanager \
+  -e POSTGRES_PASSWORD=mcmanager -p 5432:5432 postgres:17-alpine
+
+cd backend  && mvn spring-boot:run           # http://localhost:8080
+cd frontend && npm install && npm start      # http://localhost:4200, /api проксюється на :8080
+```
+
+Змінні бекенду: `DB_URL`, `DB_USER`, `DB_PASSWORD`, `APP_MINECRAFT_PATH`, `APP_GAME_VERSION`, `APP_LOADER`, `APP_PROVIDER`, `CURSEFORGE_API_KEY`. Вони задають лише початкові значення, потім налаштування живуть у БД.
+
+## REST API
+
+```
+GET  /api/settings          PUT /api/settings          GET /api/settings/paths
+GET  /api/content/{mods|resourcepacks|datapacks|shaderpacks}[?refresh=true]
+GET  /api/content/{type}/updates[?refresh=true]
+POST /api/content/{type}/install        {"id": "mods/foo.jar"}
+POST /api/content/{type}/install-all
+GET  /api/content/{type}/icon?id=...
+GET  /api/worlds     GET /api/worlds/{folder}     GET /api/worlds/{folder}/raw     GET /api/worlds/{folder}/icon
+```
+
+## Структура
+
+```
+backend/    Spring Boot (settings, content, provider, world)
+frontend/   Angular 21 + nginx (проксі /api -> backend)
+docker-compose.yml
+```

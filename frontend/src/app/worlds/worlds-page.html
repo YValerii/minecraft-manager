@@ -1,0 +1,59 @@
+<header class="page-head">
+  <div>
+    <h1>
+      <span aria-hidden="true">🌍</span> {{ i18n.t('worlds.heading') }}
+      @if (worlds(); as w) {
+        <span class="count">{{ w.length }}</span>
+      }
+    </h1>
+  </div>
+  <div class="actions">
+    <button class="btn" (click)="load()" [disabled]="loading()">
+      @if (loading()) {
+        <span class="spin"></span> {{ i18n.t('worlds.reading') }}
+      } @else {
+        ⟳ {{ i18n.t('worlds.refreshBtn') }}
+      }
+    </button>
+  </div>
+</header>
+
+@if (error(); as e) {
+  <div class="banner error">{{ e }}</div>
+}
+
+@if (loading() && !worlds()) {
+  <div class="empty"><span class="spin"></span> {{ i18n.t('worlds.loadingLevelData') }}</div>
+} @else if (worlds(); as list) {
+  @if (list.length === 0) {
+    <div class="empty">
+      {{ i18n.t('worlds.emptyPrefix') }} <a routerLink="/settings">{{ i18n.t('worlds.settingsLinkText') }}</a>.
+    </div>
+  } @else {
+    <div class="grid">
+      @for (w of list; track w.folder) {
+        <button class="tile" type="button" (click)="selected.set(w.folder)">
+          <div class="thumb">
+            @if (showIcon(w)) {
+              <img class="pixel" [src]="api.worldIconUrl(w.folder)" alt="" loading="lazy" (error)="iconBroken(w)" />
+            } @else {
+              <span class="ph" aria-hidden="true">🌍</span>
+            }
+          </div>
+          <div class="info">
+            <h3>{{ w.name }}</h3>
+            <p class="ver">{{ w.versionName ?? i18n.t('worlds.unknownVersion') }}</p>
+            <p class="sub">{{ modeLabel(w) }} · {{ w.lastPlayed | timeAgo }}</p>
+          </div>
+          @if (w.hardcore) {
+            <span class="badge danger flag">Hardcore</span>
+          }
+        </button>
+      }
+    </div>
+  }
+}
+
+@if (selected(); as folder) {
+  <app-world-modal [folder]="folder" (closed)="selected.set(null)" />
+}

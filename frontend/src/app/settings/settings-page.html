@@ -1,0 +1,127 @@
+<header class="page-head">
+  <h1><span aria-hidden="true">⚙️</span> {{ i18n.t('settings.heading') }}</h1>
+</header>
+
+@if (loading()) {
+  <div class="empty"><span class="spin"></span> {{ i18n.t('settings.loading') }}</div>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="save()">
+    @if (error(); as e) {
+      <div class="banner error">{{ e }}</div>
+    }
+    @if (saved()) {
+      <div class="banner ok">{{ i18n.t('settings.savedBanner') }}</div>
+    }
+
+    <section class="card">
+      <h2>{{ i18n.t('settings.minecraftSection') }}</h2>
+      <div class="grid">
+        <label class="wide">
+          <span>{{ i18n.t('settings.pathLabel') }}</span>
+          <input type="text" formControlName="minecraftPath" placeholder="%APPDATA%\.minecraft" />
+          <small [innerHTML]="i18n.t('settings.pathHint')"></small>
+        </label>
+
+        <label>
+          <span>{{ i18n.t('settings.versionLabel') }}</span>
+          <input type="text" formControlName="gameVersion" placeholder="26.3" />
+          <small>{{ i18n.t('settings.versionHint') }}</small>
+        </label>
+
+        <label>
+          <span>{{ i18n.t('settings.loaderLabel') }}</span>
+          <input type="text" formControlName="loader" list="loaders" placeholder="neoforge" />
+          <datalist id="loaders">
+            <option value="neoforge"></option>
+            <option value="forge"></option>
+            <option value="fabric"></option>
+            <option value="quilt"></option>
+          </datalist>
+          <small>{{ i18n.t('settings.loaderHint') }}</small>
+        </label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>{{ i18n.t('settings.sourceSection') }}</h2>
+      <div class="grid">
+        <label>
+          <span>{{ i18n.t('settings.sourceLabel') }}</span>
+          <select formControlName="provider">
+            <option value="MODRINTH">{{ i18n.t('settings.sourceModrinthOption') }}</option>
+            <option value="CURSEFORGE">{{ i18n.t('settings.sourceCurseforgeOption') }}</option>
+          </select>
+        </label>
+
+        <label>
+          <span>{{ i18n.t('settings.curseforgeKeyLabel') }}</span>
+          <input type="password" formControlName="curseforgeApiKey" autocomplete="off" placeholder="$2a$10$…" />
+          <small [innerHTML]="i18n.t('settings.curseforgeKeyHint')"></small>
+        </label>
+      </div>
+      @if (needsKey()) {
+        <div class="banner warn inline">{{ i18n.t('settings.needsKeyWarning') }}</div>
+      }
+    </section>
+
+    <section class="card">
+      <h2>{{ i18n.t('settings.foldersSection') }}</h2>
+      <p class="hint">{{ i18n.t('settings.foldersHint') }}</p>
+      <div class="grid">
+        <label>
+          <span>{{ i18n.t('settings.modsLabel') }}</span>
+          <input type="text" formControlName="modsDir" placeholder="mods" />
+        </label>
+        <label>
+          <span>{{ i18n.t('settings.resourcepacksLabel') }}</span>
+          <input type="text" formControlName="resourcepacksDir" placeholder="resourcepacks" />
+        </label>
+        <label>
+          <span>{{ i18n.t('settings.shaderpacksLabel') }}</span>
+          <input type="text" formControlName="shaderpacksDir" placeholder="shaderpacks" />
+        </label>
+        <label>
+          <span>{{ i18n.t('settings.datapacksLabel') }}</span>
+          <input type="text" formControlName="datapacksDir" placeholder="datapacks" />
+          <small [innerHTML]="i18n.t('settings.datapacksHint')"></small>
+        </label>
+        <label>
+          <span>{{ i18n.t('settings.savesLabel') }}</span>
+          <input type="text" formControlName="savesDir" placeholder="saves" />
+        </label>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button class="btn primary" type="submit" [disabled]="saving()">
+        @if (saving()) {
+          <span class="spin"></span> {{ i18n.t('settings.saving') }}
+        } @else {
+          {{ i18n.t('settings.saveBtn') }}
+        }
+      </button>
+    </div>
+  </form>
+
+  @if (paths().length > 0) {
+    <section class="card resolved">
+      <h2>{{ i18n.t('settings.resolvedPathsSection') }}</h2>
+      <ul>
+        @for (p of paths(); track p.key) {
+          <li>
+            <span
+              class="mark"
+              [class.ok]="p.exists"
+              [class.bad]="!p.exists"
+              [title]="p.exists ? i18n.t('settings.folderExistsTitle') : i18n.t('settings.folderMissingTitle')"
+            >
+              {{ p.exists ? '✓' : '✗' }}
+            </span>
+            <span class="lbl">{{ p.label }}</span>
+            <code>{{ p.path }}</code>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+}

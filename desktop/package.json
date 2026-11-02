@@ -1,0 +1,69 @@
+{
+  "name": "minecraft-manager",
+  "productName": "Minecraft Manager",
+  "version": "1.0.1",
+  "private": true,
+  "description": "Shows everything installed in your Minecraft and updates mods, resource packs, shaders and datapacks with one click.",
+  "homepage": "https://github.com/YValerii/minecraft-manager",
+  "author": "YValerii <YValerii@users.noreply.github.com>",
+  "main": "src/main.js",
+  "scripts": {
+    "build:resources": "node scripts/build-resources.js",
+    "start": "electron .",
+    "dist": "electron-builder --publish never",
+    "smoke": "node scripts/smoke.js"
+  },
+  "build": {
+    "appId": "com.mcmanager.desktop",
+    "artifactName": "${name}-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "build-output",
+        "to": ".",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "msi"
+      ]
+    },
+    "msi": {
+      "oneClick": false,
+      "perMachine": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.utilities",
+      "identity": "-",
+      "hardenedRuntime": false
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Game"
+    }
+  },
+  "devDependencies": {
+    "electron": "45.2.1",
+    "electron-builder": "26.18.0"
+  }
+}

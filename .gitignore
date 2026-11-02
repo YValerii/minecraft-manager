@@ -8,3 +8,6 @@ frontend/out-tsc/
 .idea/
 *.iml
 .vscode/
+desktop/node_modules/
+desktop/build-output/
+desktop/dist/

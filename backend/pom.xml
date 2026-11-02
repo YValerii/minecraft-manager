@@ -13,7 +13,7 @@
 
     <groupId>com.mcmanager</groupId>
     <artifactId>minecraft-manager-backend</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <name>minecraft-manager-backend</name>
 
     <properties>
@@ -47,4 +47,25 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- One runnable jar with the UI inside. Run "ng build" in frontend/ first.
+             Builds into target/desktop, so it can't leak the UI into a normal or Docker build. -->
+        <profile>
+            <id>bundle-ui</id>
+            <build>
+                <directory>${project.basedir}/target/desktop</directory>
+                <finalName>minecraft-manager-${project.version}</finalName>
+                <resources>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                    </resource>
+                    <resource>
+                        <directory>../frontend/dist/minecraft-manager/browser</directory>
+                        <targetPath>static</targetPath>
+                    </resource>
+                </resources>
+            </build>
+        </profile>
+    </profiles>
 </project>

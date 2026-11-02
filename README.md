@@ -2,13 +2,44 @@
 
 *Read in another language: [Українська](README.uk.md)*
 
-A web app that shows everything installed in your Minecraft, pulls names, icons, and versions from Modrinth (or CurseForge), and updates mods, resource packs, shaders, and datapacks with one click.
+An app that shows everything installed in your Minecraft, pulls names, icons, and versions from Modrinth (or CurseForge), and updates mods, resource packs, shaders, and datapacks with one click.
 
 - **Backend:** Spring Boot 3.5, Java 21, settings and the mod-identification cache stored as local JSON files (no database)
 - **Frontend:** Angular 21 (standalone, signals, zoneless)
-- **Run:** Docker Compose, one command
+- **Desktop:** Electron installers for Windows, macOS and Linux, Java included
+- **Or run with:** Docker Compose, one command
 
-## Running
+## Download
+
+Install it like any other app. Java, Docker and a database are not needed. Get the installer for your system from the [latest release](https://github.com/YValerii/minecraft-manager/releases/latest):
+
+| System | File |
+|---|---|
+| Windows 10/11 | `minecraft-manager-<version>-win-x64.msi` or `minecraft-manager-<version>-win-x64.exe` |
+| macOS, Apple Silicon | `minecraft-manager-<version>-mac-arm64.dmg` |
+| macOS, Intel | `minecraft-manager-<version>-mac-x64.dmg` |
+| Linux | `minecraft-manager-<version>-linux-x86_64.AppImage` or `minecraft-manager-<version>-linux-amd64.deb` |
+| Any system with Java 21+ | `minecraft-manager-<version>.jar` |
+
+The installers aren't code-signed yet, so the first launch needs one extra step:
+
+- **Windows:** on the SmartScreen warning, choose "More info", then "Run anyway".
+- **macOS:** drag the app to Applications, then run `xattr -cr "/Applications/Minecraft Manager.app"` in Terminal. Without this, macOS reports the app as damaged.
+- **Linux AppImage:** run `chmod +x` on the file first. On Ubuntu 24.04 and later, also start it with `--no-sandbox`, or install the `.deb` instead.
+
+Settings are stored in the app's user data folder: `%APPDATA%\Minecraft Manager` on Windows, `~/Library/Application Support/Minecraft Manager` on macOS, `~/.config/Minecraft Manager` on Linux.
+
+## Running the jar
+
+The jar contains both the UI and the backend. It needs Java 21 or newer, and works the same on every OS:
+
+```bash
+java -jar minecraft-manager-1.0.1.jar
+```
+
+It opens http://localhost:8080 in your browser. Use `--server.port=9000` if that port is taken. Settings are saved in a `data` folder in the directory you run it from; set `APP_DATA_DIR` to change that. Press Ctrl+C in the terminal to stop it. The app is only reachable from your own computer.
+
+## Running with Docker
 
 ```bash
 docker compose up --build
@@ -90,3 +121,19 @@ backend/    Spring Boot (settings, content, provider, world)
 frontend/   Angular 21 + nginx (proxies /api -> backend)
 docker-compose.yml
 ```
+
+## Building the desktop app
+
+Requires JDK 21 and Node.js 22 or newer. Installers are built for the current OS only.
+
+```bash
+cd desktop
+npm ci
+npm run build:resources   # single jar with UI and backend, trimmed Java runtime
+npm start                 # run without packaging
+npm run dist              # build the installer into desktop/dist
+```
+
+`build:resources` also leaves the standalone jar in `backend/target/desktop/`.
+
+Pushing a `release/**` branch builds and tests all installers in GitHub Actions. Pushing a `v*` tag that matches the version in `desktop/package.json` also publishes them as a GitHub release.

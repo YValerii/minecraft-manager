@@ -1,0 +1,144 @@
+name: Desktop build
+
+# Branches under release/ build and test the installers without publishing anything.
+# A v* tag does the same and then publishes a GitHub release with the installers attached.
+on:
+  push:
+    branches: ['release/**']
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: windows-x64, os: windows-latest }
+          - { name: linux-x64, os: ubuntu-latest }
+          - { name: macos-arm64, os: macos-14 }
+          - { name: macos-x64, os: macos-15-intel }
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the tag matches the app version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          version="$(node -p "require('./desktop/package.json').version")"
+          [ "$GITHUB_REF_NAME" = "v$version" ] || { echo "Tag $GITHUB_REF_NAME != desktop version $version"; exit 1; }
+          grep -q "<version>$version</version>" backend/pom.xml || { echo "backend/pom.xml is not at version $version"; exit 1; }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install desktop dependencies
+        working-directory: desktop
+        run: npm ci
+
+      - name: Build UI, backend and Java runtime
+        working-directory: desktop
+        run: npm run build:resources
+
+      - name: Build installers
+        working-directory: desktop
+        run: npm run dist
+
+      - name: Install the Linux test display
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Launch the packaged app
+        working-directory: desktop
+        run: npm run smoke
+
+      - name: Install, launch and uninstall the MSI
+        if: runner.os == 'Windows'
+        working-directory: desktop
+        shell: pwsh
+        run: |
+          $msi = (Get-ChildItem dist/*.msi).FullName
+          $install = Start-Process msiexec -ArgumentList "/i `"$msi`" /qn /l*v msi-install.log" -Wait -PassThru
+          if ($install.ExitCode -ne 0) { Get-Content msi-install.log -Tail 40; throw "Install failed: $($install.ExitCode)" }
+
+          $exe = "$env:LOCALAPPDATA\Programs\Minecraft Manager\Minecraft Manager.exe"
+          if (-not (Test-Path $exe)) { throw "Not installed at $exe" }
+          $env:MCM_SMOKE_TEST = '1'
+          $run = Start-Process $exe -Wait -PassThru
+          if ($run.ExitCode -ne 0) { throw "Installed app failed: $($run.ExitCode)" }
+
+          $remove = Start-Process msiexec -ArgumentList "/x `"$msi`" /qn" -Wait -PassThru
+          if ($remove.ExitCode -ne 0) { throw "Uninstall failed: $($remove.ExitCode)" }
+          if (Test-Path $exe) { throw "Still present after uninstall" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          if-no-files-found: error
+          path: |
+            desktop/dist/*.exe
+            desktop/dist/*.msi
+            desktop/dist/*.dmg
+            desktop/dist/*.AppImage
+            desktop/dist/*.deb
+
+      # The jar is the same on every OS, so one build is enough.
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: jar
+          if-no-files-found: error
+          path: backend/target/desktop/minecraft-manager-*.jar
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: installers
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Minecraft Manager ${{ github.ref_name }}
+          generate_release_notes: true
+          files: installers/*
+
+      - name: Publish the jar to GitHub Packages
+        working-directory: backend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          ./mvnw -B deploy:deploy-file \
+            -Dfile="../installers/minecraft-manager-$version.jar" \
+            -DgroupId=com.mcmanager \
+            -DartifactId=minecraft-manager \
+            -Dversion="$version" \
+            -Dpackaging=jar \
+            -DrepositoryId=github \
+            -Durl="https://maven.pkg.github.com/$GITHUB_REPOSITORY"

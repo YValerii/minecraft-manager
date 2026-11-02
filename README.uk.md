@@ -4,7 +4,7 @@
 
 Веб-застосунок, який показує все, що встановлено у вашому Minecraft, підтягує назви, іконки та версії з Modrinth (або CurseForge) і оновлює моди, ресурс паки, шейдери та датапаки однією кнопкою.
 
-- **Backend:** Spring Boot 3.5, Java 21, PostgreSQL
+- **Backend:** Spring Boot 3.5, Java 21, налаштування та кеш розпізнавання модів зберігаються у локальних JSON-файлах (без бази даних)
 - **Frontend:** Angular 21 (standalone, signals, zoneless)
 - **Запуск:** Docker Compose, одна команда
 
@@ -41,7 +41,7 @@ MINECRAFT_DIR=C:/Users/Ім'я/AppData/Roaming/.minecraft
 
 ### Як розпізнаються файли
 
-Файл ідентифікується за хешем, а не за назвою. Для Modrinth використовується SHA-1, для CurseForge фінгерпринт murmur2. Тому назва файлу може бути будь-якою. З сайту береться коректна назва, опис, іконка та поточна версія. Результат кешується в Postgres.
+Файл ідентифікується за хешем, а не за назвою. Для Modrinth використовується SHA-1, для CurseForge фінгерпринт murmur2. Тому назва файлу може бути будь-якою. З сайту береться коректна назва, опис, іконка та поточна версія. Результат кешується в локальному JSON-файлі (`app.data-dir/identity-cache.json`).
 
 Якщо файл на сайті не знайдено (власна збірка, папка-пак), показуються дані, прочитані з самого файлу: `neoforge.mods.toml`, `mods.toml`, `fabric.mod.json`, `quilt.mod.json`, `mcmod.info`, `pack.mcmeta` та `pack.png`. Такий елемент позначається як «Не розпізнано».
 
@@ -65,15 +65,11 @@ MINECRAFT_DIR=C:/Users/Ім'я/AppData/Roaming/.minecraft
 ## Розробка без Docker
 
 ```bash
-# Postgres, наприклад:
-docker run -d --name mcdb -e POSTGRES_DB=mcmanager -e POSTGRES_USER=mcmanager \
-  -e POSTGRES_PASSWORD=mcmanager -p 5432:5432 postgres:17-alpine
-
 cd backend  && mvn spring-boot:run           # http://localhost:8080
 cd frontend && npm install && npm start      # http://localhost:4200, /api проксюється на :8080
 ```
 
-Змінні бекенду: `DB_URL`, `DB_USER`, `DB_PASSWORD`, `APP_MINECRAFT_PATH`, `APP_GAME_VERSION`, `APP_LOADER`, `APP_PROVIDER`, `CURSEFORGE_API_KEY`. Вони задають лише початкові значення, потім налаштування живуть у БД.
+Змінні бекенду: `APP_MINECRAFT_PATH`, `APP_GAME_VERSION`, `APP_LOADER`, `APP_PROVIDER`, `CURSEFORGE_API_KEY`, `APP_DATA_DIR`. Вони задають лише початкові значення, потім налаштування живуть у `APP_DATA_DIR/settings.json` (`APP_DATA_DIR` за замовчуванням `./data`; налаштування змінюються на сторінці «Налаштування»).
 
 ## REST API
 

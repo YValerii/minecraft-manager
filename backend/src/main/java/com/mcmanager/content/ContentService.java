@@ -34,8 +34,7 @@ import com.mcmanager.content.ContentDtos.InstallResult;
 import com.mcmanager.content.ContentDtos.UpdateItem;
 import com.mcmanager.content.ContentDtos.UpdatesResult;
 import com.mcmanager.provider.ContentProvider;
-import com.mcmanager.provider.IdentityEntity;
-import com.mcmanager.provider.IdentityRepository;
+import com.mcmanager.provider.IdentityCache;
 import com.mcmanager.provider.ProjectInfo;
 import com.mcmanager.provider.ProviderType;
 import com.mcmanager.provider.UpdateCheck;
@@ -56,14 +55,14 @@ public class ContentService {
     private final SettingsService settings;
     private final FileScanner scanner;
     private final LocalMetadataReader metadata;
-    private final IdentityRepository identities;
+    private final IdentityCache identities;
     private final Map<ProviderType, ContentProvider> providers;
     private final Http http;
     private final Duration ttl;
     private final Map<String, CachedCheck> updateCache = new ConcurrentHashMap<>();
 
     public ContentService(SettingsService settings, FileScanner scanner, LocalMetadataReader metadata,
-            IdentityRepository identities, List<ContentProvider> providerList, Http http, AppProperties props) {
+            IdentityCache identities, List<ContentProvider> providerList, Http http, AppProperties props) {
         this.settings = settings;
         this.scanner = scanner;
         this.metadata = metadata;
@@ -122,18 +121,17 @@ public class ContentService {
             return Map.of();
         }
 
-        Map<String, IdentityEntity> cached = identities
-                .findAllById(hashable.stream().map(f -> IdentityEntity.key(pt, f.sha1())).distinct().toList())
-                .stream().collect(Collectors.toMap(IdentityEntity::getCacheKey, Function.identity()));
+        Map<String, IdentityCache.Entry> cached = identities
+                .findAll(hashable.stream().map(f -> IdentityCache.key(pt, f.sha1())).distinct().toList());
 
         Instant negativeFresh = Instant.now().minus(ttl);
         Map<String, ProjectInfo> result = new HashMap<>();
         List<LocalFile> lookup = new ArrayList<>();
         for (LocalFile f : hashable) {
-            IdentityEntity c = cached.get(IdentityEntity.key(pt, f.sha1()));
-            if (c != null && !refresh && c.isFound()) {
+            IdentityCache.Entry c = cached.get(IdentityCache.key(pt, f.sha1()));
+            if (c != null && !refresh && c.found()) {
                 result.put(f.id(), c.toProject(pt));
-            } else if (c != null && !refresh && c.getCheckedAt().isAfter(negativeFresh)) {
+            } else if (c != null && !refresh && c.checkedAt().isAfter(negativeFresh)) {
                 // checked recently — this file isn't on the source
             } else {
                 lookup.add(f);
@@ -142,16 +140,16 @@ public class ContentService {
 
         if (!lookup.isEmpty()) {
             Map<String, ProjectInfo> found = provider.identify(type, lookup, s);
-            Map<String, IdentityEntity> toSave = new LinkedHashMap<>();
+            Map<String, IdentityCache.Entry> toSave = new LinkedHashMap<>();
             for (LocalFile f : lookup) {
                 ProjectInfo p = found.get(f.id());
-                IdentityEntity e = IdentityEntity.of(pt, f.sha1(), p);
-                toSave.put(e.getCacheKey(), e);
+                IdentityCache.Entry e = IdentityCache.Entry.of(pt, f.sha1(), p);
+                toSave.put(e.cacheKey(), e);
                 if (p != null) {
                     result.put(f.id(), p);
                 }
             }
-            identities.saveAll(toSave.values());
+            identities.saveAll(List.copyOf(toSave.values()));
         }
         return result;
     }

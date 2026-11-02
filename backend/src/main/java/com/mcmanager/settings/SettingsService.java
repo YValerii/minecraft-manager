@@ -2,6 +2,7 @@ package com.mcmanager.settings;
 
 import static com.mcmanager.common.Util.blank;
 
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -10,47 +11,58 @@ import java.util.Locale;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mcmanager.common.ApiException;
+import com.mcmanager.common.JsonFileStore;
 import com.mcmanager.config.AppProperties;
 import com.mcmanager.content.ContentType;
 import com.mcmanager.provider.ProviderType;
 
+/** Settings persisted to a local JSON file (app.data-dir/settings.json) instead of a database. */
 @Service
 public class SettingsService {
 
     public record PathInfo(String key, String label, String path, boolean exists) {
     }
 
-    private final SettingsRepository repo;
+    private final ObjectMapper mapper;
     private final AppProperties props;
+    private final Path file;
 
-    public SettingsService(SettingsRepository repo, AppProperties props) {
-        this.repo = repo;
+    /** As stored on disk — minecraftPath may be blank, meaning "auto-detect". */
+    private volatile SettingsDto raw;
+
+    public SettingsService(ObjectMapper mapper, AppProperties props) {
+        this.mapper = mapper;
         this.props = props;
+        this.file = Path.of(blankToDefault(props.dataDir(), "./data")).resolve("settings.json")
+                .toAbsolutePath().normalize();
     }
 
-    @Transactional
     public SettingsDto get() {
-        SettingsEntity e = repo.findById(1L).orElseGet(() -> repo.save(defaults()));
-        return toDto(e);
+        return toDto(raw());
     }
 
-    @Transactional
-    public SettingsDto update(SettingsDto in) {
-        SettingsEntity e = repo.findById(1L).orElseGet(this::defaults);
-        e.setMinecraftPath(trim(in.minecraftPath()));
-        e.setGameVersion(required(in.gameVersion(), "Minecraft version"));
-        e.setLoader(required(in.loader(), "Mod loader").toLowerCase(Locale.ROOT));
-        e.setProvider(parseProvider(in.provider()).name());
-        e.setCurseforgeApiKey(trim(in.curseforgeApiKey()));
-        e.setModsDir(orDefault(in.modsDir(), ContentType.MODS.defaultDir()));
-        e.setResourcepacksDir(orDefault(in.resourcepacksDir(), ContentType.RESOURCEPACKS.defaultDir()));
-        e.setShaderpacksDir(orDefault(in.shaderpacksDir(), ContentType.SHADERPACKS.defaultDir()));
-        e.setDatapacksDir(orDefault(in.datapacksDir(), ContentType.DATAPACKS.defaultDir()));
-        e.setSavesDir(orDefault(in.savesDir(), "saves"));
-        return toDto(repo.save(e));
+    public synchronized SettingsDto update(SettingsDto in) {
+        SettingsDto next = new SettingsDto(
+                trim(in.minecraftPath()),
+                required(in.gameVersion(), "Minecraft version"),
+                required(in.loader(), "Mod loader").toLowerCase(Locale.ROOT),
+                parseProvider(in.provider()).name(),
+                trim(in.curseforgeApiKey()),
+                orDefault(in.modsDir(), ContentType.MODS.defaultDir()),
+                orDefault(in.resourcepacksDir(), ContentType.RESOURCEPACKS.defaultDir()),
+                orDefault(in.shaderpacksDir(), ContentType.SHADERPACKS.defaultDir()),
+                orDefault(in.datapacksDir(), ContentType.DATAPACKS.defaultDir()),
+                orDefault(in.savesDir(), "saves"));
+        try {
+            JsonFileStore.write(mapper, file, next);
+        } catch (UncheckedIOException e) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save settings to " + file);
+        }
+        raw = next;
+        return toDto(next);
     }
 
     public Path minecraftRoot(SettingsDto s) {
@@ -95,27 +107,42 @@ public class SettingsService {
         return resolved.toAbsolutePath().normalize();
     }
 
-    private SettingsEntity defaults() {
-        SettingsEntity e = new SettingsEntity();
-        e.setMinecraftPath(trim(props.minecraftPath()));
-        e.setGameVersion(orDefault(props.gameVersion(), "26.3"));
-        e.setLoader(orDefault(props.loader(), "neoforge").toLowerCase(Locale.ROOT));
-        e.setProvider(parseProvider(props.provider()).name());
-        e.setCurseforgeApiKey(trim(props.curseforgeApiKey()));
-        e.setModsDir(ContentType.MODS.defaultDir());
-        e.setResourcepacksDir(ContentType.RESOURCEPACKS.defaultDir());
-        e.setShaderpacksDir(ContentType.SHADERPACKS.defaultDir());
-        e.setDatapacksDir(ContentType.DATAPACKS.defaultDir());
-        e.setSavesDir("saves");
-        return e;
+    /** Loaded from disk on first use, or seeded from application.yml / environment variables. */
+    private SettingsDto raw() {
+        SettingsDto r = raw;
+        if (r == null) {
+            synchronized (this) {
+                r = raw;
+                if (r == null) {
+                    SettingsDto loaded = JsonFileStore.read(mapper, file, SettingsDto.class);
+                    r = loaded != null ? loaded : defaults();
+                    raw = r;
+                }
+            }
+        }
+        return r;
     }
 
-    private SettingsDto toDto(SettingsEntity e) {
+    private SettingsDto defaults() {
         return new SettingsDto(
-                blank(e.getMinecraftPath()) ? detectMinecraftPath().toString() : e.getMinecraftPath(),
-                e.getGameVersion(), e.getLoader(), e.getProvider(), e.getCurseforgeApiKey(),
-                e.getModsDir(), e.getResourcepacksDir(), e.getShaderpacksDir(),
-                e.getDatapacksDir(), e.getSavesDir());
+                trim(props.minecraftPath()),
+                orDefault(props.gameVersion(), "26.3"),
+                orDefault(props.loader(), "neoforge").toLowerCase(Locale.ROOT),
+                parseProvider(props.provider()).name(),
+                trim(props.curseforgeApiKey()),
+                ContentType.MODS.defaultDir(),
+                ContentType.RESOURCEPACKS.defaultDir(),
+                ContentType.SHADERPACKS.defaultDir(),
+                ContentType.DATAPACKS.defaultDir(),
+                "saves");
+    }
+
+    private SettingsDto toDto(SettingsDto s) {
+        return blank(s.minecraftPath())
+                ? new SettingsDto(detectMinecraftPath().toString(), s.gameVersion(), s.loader(), s.provider(),
+                        s.curseforgeApiKey(), s.modsDir(), s.resourcepacksDir(), s.shaderpacksDir(),
+                        s.datapacksDir(), s.savesDir())
+                : s;
     }
 
     /** %APPDATA%\.minecraft on Windows, otherwise the typical paths for macOS/Linux. */
@@ -156,5 +183,9 @@ public class SettingsService {
 
     private static String trim(String v) {
         return blank(v) ? null : v.trim();
+    }
+
+    private static String blankToDefault(String v, String def) {
+        return blank(v) ? def : v.trim();
     }
 }

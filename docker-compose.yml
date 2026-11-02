@@ -3,32 +3,11 @@
 name: minecraft-manager
 
 services:
-  db:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: mcmanager
-      POSTGRES_USER: mcmanager
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-mcmanager}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mcmanager -d mcmanager"]
-      interval: 5s
-      timeout: 3s
-      retries: 15
-
   backend:
     build: ./backend
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
-      DB_URL: jdbc:postgresql://db:5432/mcmanager
-      DB_USER: mcmanager
-      DB_PASSWORD: ${DB_PASSWORD:-mcmanager}
-      # Initial values; after the first run, settings live in the DB and are changed in the UI.
+      # Initial values; after the first run, settings live in a local JSON file and are changed in the UI.
       APP_MINECRAFT_PATH: /minecraft
       APP_GAME_VERSION: ${MC_VERSION:-26.3}
       APP_LOADER: ${MC_LOADER:-neoforge}
@@ -38,6 +17,8 @@ services:
       # The .minecraft folder from your computer is mounted into the container with read/write access
       # (write access is needed so files can be updated). Windows: %APPDATA%\.minecraft.
       - ${MINECRAFT_DIR:-${APPDATA}/.minecraft}:/minecraft
+      # Settings and the mod-identification cache, persisted as local JSON files.
+      - appdata:/app/data
 
   frontend:
     build: ./frontend
@@ -48,4 +29,4 @@ services:
       - "${WEB_PORT:-4200}:80"
 
 volumes:
-  pgdata:
+  appdata:

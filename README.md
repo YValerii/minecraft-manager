@@ -4,7 +4,7 @@
 
 A web app that shows everything installed in your Minecraft, pulls names, icons, and versions from Modrinth (or CurseForge), and updates mods, resource packs, shaders, and datapacks with one click.
 
-- **Backend:** Spring Boot 3.5, Java 21, PostgreSQL
+- **Backend:** Spring Boot 3.5, Java 21, settings and the mod-identification cache stored as local JSON files (no database)
 - **Frontend:** Angular 21 (standalone, signals, zoneless)
 - **Run:** Docker Compose, one command
 
@@ -41,7 +41,7 @@ Defaults: Minecraft **26.3**, loader **neoforge**, source **Modrinth**. Everythi
 
 ### How files are recognized
 
-A file is identified by its hash, not by its name. Modrinth uses SHA-1, CurseForge uses the murmur2 fingerprint. So the file name can be anything. The correct name, description, icon, and current version are pulled from the site. The result is cached in Postgres.
+A file is identified by its hash, not by its name. Modrinth uses SHA-1, CurseForge uses the murmur2 fingerprint. So the file name can be anything. The correct name, description, icon, and current version are pulled from the site. The result is cached in a local JSON file (`app.data-dir/identity-cache.json`).
 
 If the file isn't found on the site (a custom build, a folder pack), data read from the file itself is shown instead: `neoforge.mods.toml`, `mods.toml`, `fabric.mod.json`, `quilt.mod.json`, `mcmod.info`, `pack.mcmeta`, and `pack.png`. Such an item is marked as "Unrecognized".
 
@@ -65,15 +65,11 @@ Shows the name, game version and data version, game mode, difficulty, hardcore, 
 ## Development without Docker
 
 ```bash
-# Postgres, for example:
-docker run -d --name mcdb -e POSTGRES_DB=mcmanager -e POSTGRES_USER=mcmanager \
-  -e POSTGRES_PASSWORD=mcmanager -p 5432:5432 postgres:17-alpine
-
 cd backend  && mvn spring-boot:run           # http://localhost:8080
 cd frontend && npm install && npm start      # http://localhost:4200, /api proxied to :8080
 ```
 
-Backend variables: `DB_URL`, `DB_USER`, `DB_PASSWORD`, `APP_MINECRAFT_PATH`, `APP_GAME_VERSION`, `APP_LOADER`, `APP_PROVIDER`, `CURSEFORGE_API_KEY`. They only set the initial values — after that, settings live in the database.
+Backend variables: `APP_MINECRAFT_PATH`, `APP_GAME_VERSION`, `APP_LOADER`, `APP_PROVIDER`, `CURSEFORGE_API_KEY`, `APP_DATA_DIR`. They only set the initial values — after that, settings live in `APP_DATA_DIR/settings.json` (`APP_DATA_DIR` defaults to `./data`; edit settings on the "Settings" page).
 
 ## REST API
 

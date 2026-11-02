@@ -1,5 +1,5 @@
 'use strict';
-// Builds what the installer ships besides Electron: the Angular UI, the Spring Boot jar and a
+// Builds what the installer ships besides Electron: one jar with the UI and backend inside, and a
 // trimmed Java runtime for the current OS/CPU. Output: desktop/build-output/.
 
 const { spawnSync } = require('node:child_process');
@@ -35,15 +35,16 @@ if (!fs.existsSync(path.join(frontend, 'node_modules'))) {
   run('npm', ['ci'], frontend, true);
 }
 run('npx', ['ng', 'build'], frontend, true);
-fs.cpSync(path.join(frontend, 'dist', 'minecraft-manager', 'browser'), path.join(out, 'frontend'), { recursive: true });
 
 const backend = path.join(repo, 'backend');
+const mvnArgs = ['-q', '-B', '-DskipTests', '-Pbundle-ui', 'clean', 'package'];
 if (isWindows) {
-  run('.\\mvnw.cmd', ['-q', '-B', '-DskipTests', 'package'], backend, true);
+  run('.\\mvnw.cmd', mvnArgs, backend, true);
 } else {
-  run('./mvnw', ['-q', '-B', '-DskipTests', 'package'], backend);
+  run('./mvnw', mvnArgs, backend);
 }
-fs.copyFileSync(path.join(backend, 'target', 'app.jar'), path.join(out, 'backend', 'app.jar'));
+const jar = fs.readdirSync(path.join(backend, 'target', 'desktop')).find((f) => /^minecraft-manager-.*\.jar$/.test(f));
+fs.copyFileSync(path.join(backend, 'target', 'desktop', jar), path.join(out, 'backend', 'app.jar'));
 
 const jlink = process.env.JAVA_HOME
   ? path.join(process.env.JAVA_HOME, 'bin', isWindows ? 'jlink.exe' : 'jlink')

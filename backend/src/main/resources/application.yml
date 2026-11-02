@@ -1,4 +1,6 @@
 server:
+  # The API has no login, so it's only reachable from this computer unless explicitly opened up.
+  address: ${SERVER_ADDRESS:127.0.0.1}
   port: 8080
 
 spring:

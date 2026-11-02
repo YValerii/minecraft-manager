@@ -19,6 +19,7 @@
 | macOS, Apple Silicon | `minecraft-manager-<version>-mac-arm64.dmg` |
 | macOS, Intel | `minecraft-manager-<version>-mac-x64.dmg` |
 | Linux | `minecraft-manager-<version>-linux-x86_64.AppImage` або `minecraft-manager-<version>-linux-amd64.deb` |
+| Будь-яка система з Java 21+ | `minecraft-manager-<version>.jar` |
 
 Інсталятори поки не мають цифрового підпису, тому перший запуск потребує додаткового кроку:
 
@@ -27,6 +28,16 @@
 - **Linux AppImage:** спочатку виконайте для файлу `chmod +x`. В Ubuntu 24.04 і новіших також запускайте його з `--no-sandbox` або встановіть `.deb`.
 
 Налаштування зберігаються в папці даних застосунку: `%APPDATA%\Minecraft Manager` у Windows, `~/Library/Application Support/Minecraft Manager` у macOS, `~/.config/Minecraft Manager` у Linux.
+
+## Запуск jar-файлу
+
+Jar містить і UI, і бекенд. Потрібна Java 21 або новіша, працює однаково на будь-якій ОС:
+
+```bash
+java -jar minecraft-manager-1.0.0.jar
+```
+
+Відкриється http://localhost:8080 у браузері. Якщо порт зайнятий, додайте `--server.port=9000`. Налаштування зберігаються в папці `data` у каталозі запуску; змінити її можна через `APP_DATA_DIR`. Щоб зупинити, натисніть Ctrl+C у терміналі. Застосунок доступний лише з вашого комп'ютера.
 
 ## Запуск через Docker
 
@@ -118,9 +129,11 @@ docker-compose.yml
 ```bash
 cd desktop
 npm ci
-npm run build:resources   # UI, jar бекенду, урізане середовище Java
+npm run build:resources   # один jar з UI та бекендом, урізане середовище Java
 npm start                 # запуск без пакування
 npm run dist              # збірка інсталятора в desktop/dist
 ```
+
+`build:resources` також залишає окремий jar у `backend/target/desktop/`.
 
 Push гілки `release/**` збирає та перевіряє всі інсталятори в GitHub Actions. Push тегу `v*`, що збігається з версією в `desktop/package.json`, також публікує їх як реліз GitHub.

@@ -1,6 +1,6 @@
 'use strict';
 // Launches the packaged app from dist/ in smoke-test mode. Exit code 0 means the window opened, the
-// bundled Java runtime started the backend, and the UI reached it through the app:// protocol.
+// bundled Java runtime started the jar, and the UI it serves can read and write through the API.
 
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');

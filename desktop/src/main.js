@@ -1,30 +1,25 @@
 'use strict';
 
-const { app, BrowserWindow, Menu, dialog, net, protocol, shell } = require('electron');
+const { app, BrowserWindow, Menu, dialog, net, shell } = require('electron');
 const { spawn } = require('node:child_process');
 const fs = require('node:fs');
 const netSocket = require('node:net');
 const path = require('node:path');
-const { pathToFileURL } = require('node:url');
 
-const APP_ORIGIN = 'app://bundle';
 const BACKEND_START_TIMEOUT_MS = 60_000;
 // CI launches the packaged app with this set: it checks the UI can reach the backend, then exits.
 const SMOKE_TEST = process.env.MCM_SMOKE_TEST === '1';
 
 const resources = app.isPackaged ? process.resourcesPath : path.join(__dirname, '..', 'build-output');
-const frontendRoot = path.join(resources, 'frontend');
 
 let backend = null;
 let backendPort = null;
 let quitting = false;
 let mainWindow = null;
 
-// Must happen before the app is ready. "standard" + "secure" make Angular's base href, relative
-// URLs and fetch behave as they do over https.
-protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } },
-]);
+function backendOrigin() {
+  return `http://127.0.0.1:${backendPort}`;
+}
 
 function freePort() {
   return new Promise((resolve, reject) => {
@@ -66,6 +61,7 @@ function startBackend(port) {
       '--server.address=127.0.0.1',
       `--server.port=${port}`,
       '--app.exit-on-stdin-close=true',
+      '--app.open-browser=false',
     ],
     {
       env: { ...process.env, APP_DATA_DIR: app.getPath('userData') },
@@ -112,31 +108,6 @@ function stopBackend() {
   }
 }
 
-async function serveFrontend(pathname) {
-  const requested = path.resolve(frontendRoot, `.${decodeURIComponent(pathname)}`);
-  const inside = requested.startsWith(frontendRoot + path.sep);
-  const isFile = inside && fs.statSync(requested, { throwIfNoEntry: false })?.isFile();
-  // Anything else is an Angular route, as with nginx's try_files in the Docker setup.
-  const file = isFile ? requested : path.join(frontendRoot, 'index.html');
-  return net.fetch(pathToFileURL(file).toString());
-}
-
-function handleAppProtocol() {
-  protocol.handle('app', (request) => {
-    const url = new URL(request.url);
-    if (!url.pathname.startsWith('/api/')) {
-      return serveFrontend(url.pathname);
-    }
-    const hasBody = !['GET', 'HEAD'].includes(request.method);
-    return net.fetch(`http://127.0.0.1:${backendPort}${url.pathname}${url.search}`, {
-      method: request.method,
-      headers: request.headers,
-      body: hasBody ? request.body : undefined,
-      duplex: hasBody ? 'half' : undefined,
-    });
-  });
-}
-
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -161,14 +132,13 @@ function createWindow() {
     return { action: 'deny' };
   });
   mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (!url.startsWith(`${APP_ORIGIN}/`)) {
+    if (new URL(url).origin !== backendOrigin()) {
       event.preventDefault();
     }
   });
 }
 
 async function runSmokeTest() {
-  // Also exercises a write through the protocol, since request bodies take a different path.
   const result = await mainWindow.webContents.executeJavaScript(`
     (async () => {
       const get = await fetch('/api/settings');
@@ -194,7 +164,6 @@ async function runSmokeTest() {
 }
 
 async function launch() {
-  handleAppProtocol();
   if (process.platform !== 'darwin') {
     Menu.setApplicationMenu(null); // macOS keeps its default menu, which provides copy and paste.
   }
@@ -206,7 +175,7 @@ async function launch() {
   if (!(await waitForBackend(backendPort, logFile)) || !mainWindow) {
     return;
   }
-  await mainWindow.loadURL(`${APP_ORIGIN}/`);
+  await mainWindow.loadURL(`${backendOrigin()}/`);
   if (SMOKE_TEST) {
     await runSmokeTest();
   }

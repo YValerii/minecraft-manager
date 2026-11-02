@@ -19,6 +19,7 @@ Install it like any other app. Java, Docker and a database are not needed. Get t
 | macOS, Apple Silicon | `minecraft-manager-<version>-mac-arm64.dmg` |
 | macOS, Intel | `minecraft-manager-<version>-mac-x64.dmg` |
 | Linux | `minecraft-manager-<version>-linux-x86_64.AppImage` or `minecraft-manager-<version>-linux-amd64.deb` |
+| Any system with Java 21+ | `minecraft-manager-<version>.jar` |
 
 The installers aren't code-signed yet, so the first launch needs one extra step:
 
@@ -27,6 +28,16 @@ The installers aren't code-signed yet, so the first launch needs one extra step:
 - **Linux AppImage:** run `chmod +x` on the file first. On Ubuntu 24.04 and later, also start it with `--no-sandbox`, or install the `.deb` instead.
 
 Settings are stored in the app's user data folder: `%APPDATA%\Minecraft Manager` on Windows, `~/Library/Application Support/Minecraft Manager` on macOS, `~/.config/Minecraft Manager` on Linux.
+
+## Running the jar
+
+The jar contains both the UI and the backend. It needs Java 21 or newer, and works the same on every OS:
+
+```bash
+java -jar minecraft-manager-1.0.0.jar
+```
+
+It opens http://localhost:8080 in your browser. Use `--server.port=9000` if that port is taken. Settings are saved in a `data` folder in the directory you run it from; set `APP_DATA_DIR` to change that. Press Ctrl+C in the terminal to stop it. The app is only reachable from your own computer.
 
 ## Running with Docker
 
@@ -118,9 +129,11 @@ Requires JDK 21 and Node.js 22 or newer. Installers are built for the current OS
 ```bash
 cd desktop
 npm ci
-npm run build:resources   # UI, backend jar, trimmed Java runtime
+npm run build:resources   # single jar with UI and backend, trimmed Java runtime
 npm start                 # run without packaging
 npm run dist              # build the installer into desktop/dist
 ```
+
+`build:resources` also leaves the standalone jar in `backend/target/desktop/`.
 
 Pushing a `release/**` branch builds and tests all installers in GitHub Actions. Pushing a `v*` tag that matches the version in `desktop/package.json` also publishes them as a GitHub release.

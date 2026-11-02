@@ -33,6 +33,7 @@ jobs:
         run: |
           version="$(node -p "require('./desktop/package.json').version")"
           [ "$GITHUB_REF_NAME" = "v$version" ] || { echo "Tag $GITHUB_REF_NAME != desktop version $version"; exit 1; }
+          grep -q "<version>$version</version>" backend/pom.xml || { echo "backend/pom.xml is not at version $version"; exit 1; }
 
       - uses: actions/setup-node@v4
         with:
@@ -73,13 +74,29 @@ jobs:
             desktop/dist/*.AppImage
             desktop/dist/*.deb
 
+      # The jar is the same on every OS, so one build is enough.
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: jar
+          if-no-files-found: error
+          path: backend/target/desktop/minecraft-manager-*.jar
+
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: write
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
       - uses: actions/download-artifact@v4
         with:
           path: installers
@@ -90,3 +107,18 @@ jobs:
           name: Minecraft Manager ${{ github.ref_name }}
           generate_release_notes: true
           files: installers/*
+
+      - name: Publish the jar to GitHub Packages
+        working-directory: backend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          ./mvnw -B deploy:deploy-file \
+            -Dfile="../installers/minecraft-manager-$version.jar" \
+            -DgroupId=com.mcmanager \
+            -DartifactId=minecraft-manager \
+            -Dversion="$version" \
+            -Dpackaging=jar \
+            -DrepositoryId=github \
+            -Durl="https://maven.pkg.github.com/$GITHUB_REPOSITORY"

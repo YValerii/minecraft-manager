@@ -1,7 +1,7 @@
 {
   "name": "minecraft-manager",
   "productName": "Minecraft Manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Shows everything installed in your Minecraft and updates mods, resource packs, shaders and datapacks with one click.",
   "homepage": "https://github.com/YValerii/minecraft-manager",

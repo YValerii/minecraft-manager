@@ -34,7 +34,7 @@ Settings are stored in the app's user data folder: `%APPDATA%\Minecraft Manager`
 The jar contains both the UI and the backend. It needs Java 21 or newer, and works the same on every OS:
 
 ```bash
-java -jar minecraft-manager-1.0.0.jar
+java -jar minecraft-manager-1.0.1.jar
 ```
 
 It opens http://localhost:8080 in your browser. Use `--server.port=9000` if that port is taken. Settings are saved in a `data` folder in the directory you run it from; set `APP_DATA_DIR` to change that. Press Ctrl+C in the terminal to stop it. The app is only reachable from your own computer.

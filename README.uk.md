@@ -2,13 +2,33 @@
 
 *Читати іншою мовою: [English](README.md)*
 
-Веб-застосунок, який показує все, що встановлено у вашому Minecraft, підтягує назви, іконки та версії з Modrinth (або CurseForge) і оновлює моди, ресурс паки, шейдери та датапаки однією кнопкою.
+Застосунок, який показує все, що встановлено у вашому Minecraft, підтягує назви, іконки та версії з Modrinth (або CurseForge) і оновлює моди, ресурс паки, шейдери та датапаки однією кнопкою.
 
 - **Backend:** Spring Boot 3.5, Java 21, налаштування та кеш розпізнавання модів зберігаються у локальних JSON-файлах (без бази даних)
 - **Frontend:** Angular 21 (standalone, signals, zoneless)
-- **Запуск:** Docker Compose, одна команда
+- **Десктоп:** інсталятори Electron для Windows, macOS і Linux, Java вже всередині
+- **Або запуск через:** Docker Compose, одна команда
 
-## Запуск
+## Завантаження
+
+Встановлюється як звичайний застосунок. Java, Docker і база даних не потрібні. Завантажте інсталятор для своєї системи з [останнього релізу](https://github.com/YValerii/minecraft-manager/releases/latest):
+
+| Система | Файл |
+|---|---|
+| Windows 10/11 | `minecraft-manager-<version>-win-x64.exe` |
+| macOS, Apple Silicon | `minecraft-manager-<version>-mac-arm64.dmg` |
+| macOS, Intel | `minecraft-manager-<version>-mac-x64.dmg` |
+| Linux | `minecraft-manager-<version>-linux-x86_64.AppImage` або `minecraft-manager-<version>-linux-amd64.deb` |
+
+Інсталятори поки не мають цифрового підпису, тому перший запуск потребує додаткового кроку:
+
+- **Windows:** у попередженні SmartScreen виберіть «Докладніше», потім «Усе одно запустити».
+- **macOS:** перетягніть застосунок до Applications, потім виконайте в Terminal `xattr -cr "/Applications/Minecraft Manager.app"`. Без цього macOS повідомить, що застосунок пошкоджено.
+- **Linux AppImage:** спочатку виконайте для файлу `chmod +x`. В Ubuntu 24.04 і новіших також запускайте його з `--no-sandbox` або встановіть `.deb`.
+
+Налаштування зберігаються в папці даних застосунку: `%APPDATA%\Minecraft Manager` у Windows, `~/Library/Application Support/Minecraft Manager` у macOS, `~/.config/Minecraft Manager` у Linux.
+
+## Запуск через Docker
 
 ```bash
 docker compose up --build
@@ -90,3 +110,17 @@ backend/    Spring Boot (settings, content, provider, world)
 frontend/   Angular 21 + nginx (проксі /api -> backend)
 docker-compose.yml
 ```
+
+## Збірка десктопного застосунку
+
+Потрібні JDK 21 і Node.js 22 або новіший. Інсталятор збирається лише для поточної ОС.
+
+```bash
+cd desktop
+npm ci
+npm run build:resources   # UI, jar бекенду, урізане середовище Java
+npm start                 # запуск без пакування
+npm run dist              # збірка інсталятора в desktop/dist
+```
+
+Push гілки `release/**` збирає та перевіряє всі інсталятори в GitHub Actions. Push тегу `v*`, що збігається з версією в `desktop/package.json`, також публікує їх як реліз GitHub.

@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Minecraft Manager</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #12151a; }
+    body { display: flex; align-items: center; justify-content: center; }
+    div {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 3px solid #2d3641; border-top-color: #5cbb4a;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body><div role="progressbar" aria-label="Loading"></div></body>
+</html>

@@ -11,3 +11,4 @@ frontend/out-tsc/
 desktop/node_modules/
 desktop/build-output/
 desktop/dist/
+frontend/coverage/

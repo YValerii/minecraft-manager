@@ -40,6 +40,15 @@
           },
           "defaultConfiguration": "production"
         },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "buildTarget": "minecraft-manager:build:development",
+            "tsConfig": "tsconfig.spec.json",
+            "coverageInclude": ["src/app/**/*.ts"],
+            "coverageExclude": ["src/app/i18n/translations/**", "src/app/models.ts"]
+          }
+        },
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {

@@ -6,7 +6,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -24,9 +26,17 @@ public class LauncherService {
     private static final String FLATPAK_ID = "com.mojang.Minecraft";
 
     private final String configuredPath;
+    private final Function<String, String> env;
 
+    @Autowired
     public LauncherService(AppProperties props) {
+        this(props, System::getenv);
+    }
+
+    /** Environment variables can't be set from a test, so they can be supplied here instead. */
+    LauncherService(AppProperties props, Function<String, String> env) {
         this.configuredPath = props.launcherPath();
+        this.env = env;
     }
 
     public boolean isAvailable() {
@@ -67,12 +77,12 @@ public class LauncherService {
     }
 
     private List<String> findOnWindows() {
-        String localAppData = System.getenv("LOCALAPPDATA");
+        String localAppData = env.apply("LOCALAPPDATA");
         if (localAppData != null && Files.isDirectory(Path.of(localAppData, "Packages", WINDOWS_STORE_PACKAGE))) {
             return List.of("explorer.exe", "shell:AppsFolder\\" + WINDOWS_STORE_PACKAGE + "!Minecraft");
         }
         for (String variable : List.of("ProgramFiles(x86)", "ProgramFiles")) {
-            String programFiles = System.getenv(variable);
+            String programFiles = env.apply(variable);
             if (programFiles != null) {
                 Path exe = Path.of(programFiles, "Minecraft Launcher", "MinecraftLauncher.exe");
                 if (Files.isRegularFile(exe)) {
@@ -94,7 +104,7 @@ public class LauncherService {
     }
 
     private List<String> findOnLinux() {
-        String path = System.getenv("PATH");
+        String path = env.apply("PATH");
         if (path != null) {
             for (String dir : path.split(File.pathSeparator)) {
                 if (!dir.isEmpty() && Files.isExecutable(Path.of(dir, LINUX_COMMAND))) {

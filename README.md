@@ -209,6 +209,23 @@ desktop/    Electron wrapper and installer build
 docker-compose.yml
 ```
 
+## Tests
+
+```bash
+# Backend (coverage report: backend/target/site/jacoco/index.html)
+cd backend
+./mvnw verify
+
+# Frontend (coverage report: frontend/coverage/)
+cd frontend
+npm test
+npm run test:coverage
+```
+
+GitHub Actions runs both, plus the frontend build, on every pull request to `main` (`.github/workflows/ci.yml`). To make them required before merging, import `.github/rulesets/main-required-checks.json` under **Settings → Rules → Rulesets → New ruleset → Import a ruleset**.
+
+Tests marked `@Disabled` (backend) or `it.fails` (frontend) describe known bugs: they state the correct behaviour, so remove the marker when you fix the bug.
+
 ## Releases
 
 Pushing a `release/**` branch builds and tests all installers in GitHub Actions. Pushing a `v*` tag that matches the version in `desktop/package.json` also publishes them as a GitHub release.

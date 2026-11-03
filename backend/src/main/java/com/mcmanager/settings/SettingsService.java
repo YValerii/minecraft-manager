@@ -147,7 +147,10 @@ public class SettingsService {
 
     /** %APPDATA%\.minecraft on Windows, otherwise the typical paths for macOS/Linux. */
     static Path detectMinecraftPath() {
-        String appData = System.getenv("APPDATA");
+        return detectMinecraftPath(System.getenv("APPDATA"));
+    }
+
+    static Path detectMinecraftPath(String appData) {
         if (!blank(appData)) {
             return Path.of(appData, ".minecraft");
         }

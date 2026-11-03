@@ -11,6 +11,10 @@
       border: 3px solid #2d3641; border-top-color: #5cbb4a;
       animation: spin 0.9s linear infinite;
     }
+    @media (prefers-color-scheme: light) {
+      html, body { background: #f4f6f8; }
+      div { border-color: #d0d7de; border-top-color: #2f7d22; }
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>

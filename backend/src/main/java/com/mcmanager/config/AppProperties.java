@@ -11,5 +11,6 @@ public record AppProperties(
         String provider,
         String curseforgeApiKey,
         int cacheTtlMinutes,
-        String dataDir) {
+        String dataDir,
+        String launcherPath) {
 }

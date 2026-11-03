@@ -5,6 +5,16 @@ export const uk = {
   app: {
     sectionsAriaLabel: 'Розділи',
     settingsLink: 'Налаштування',
+    launcher: {
+      label: 'Лаунчер',
+      title: 'Відкрити Minecraft Launcher',
+      started: 'Minecraft Launcher запускається…',
+      notFound: 'Minecraft Launcher не знайдено на цьому комп’ютері',
+    },
+    theme: {
+      toLight: 'Увімкнути світлу тему',
+      toDark: 'Увімкнути темну тему',
+    },
     tabs: {
       mods: 'Моди',
       resourcepacks: 'Ресурс паки',

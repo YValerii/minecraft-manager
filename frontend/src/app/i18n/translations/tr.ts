@@ -5,6 +5,16 @@ export const tr = {
   app: {
     sectionsAriaLabel: 'Bölümler',
     settingsLink: 'Ayarlar',
+    launcher: {
+      label: 'Launcher',
+      title: "Minecraft Launcher'ı aç",
+      started: 'Minecraft Launcher başlatılıyor…',
+      notFound: 'Minecraft Launcher bu bilgisayarda bulunamadı',
+    },
+    theme: {
+      toLight: 'Açık temaya geç',
+      toDark: 'Koyu temaya geç',
+    },
     tabs: {
       mods: 'Modlar',
       resourcepacks: 'Kaynak paketleri',

@@ -5,6 +5,16 @@ export const es = {
   app: {
     sectionsAriaLabel: 'Secciones',
     settingsLink: 'Ajustes',
+    launcher: {
+      label: 'Launcher',
+      title: 'Abrir Minecraft Launcher',
+      started: 'Minecraft Launcher se está iniciando…',
+      notFound: 'No se encontró Minecraft Launcher en este equipo',
+    },
+    theme: {
+      toLight: 'Cambiar al tema claro',
+      toDark: 'Cambiar al tema oscuro',
+    },
     tabs: {
       mods: 'Mods',
       resourcepacks: 'Paquetes de recursos',

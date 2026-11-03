@@ -5,6 +5,16 @@ export const lt = {
   app: {
     sectionsAriaLabel: 'Skyriai',
     settingsLink: 'Nustatymai',
+    launcher: {
+      label: 'Paleidyklė',
+      title: 'Atidaryti Minecraft Launcher',
+      started: 'Minecraft Launcher paleidžiamas…',
+      notFound: 'Minecraft Launcher šiame kompiuteryje nerastas',
+    },
+    theme: {
+      toLight: 'Perjungti į šviesią temą',
+      toDark: 'Perjungti į tamsią temą',
+    },
     tabs: {
       mods: 'Modai',
       resourcepacks: 'Išteklių paketai',

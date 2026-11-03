@@ -5,6 +5,16 @@ export const de = {
   app: {
     sectionsAriaLabel: 'Bereiche',
     settingsLink: 'Einstellungen',
+    launcher: {
+      label: 'Launcher',
+      title: 'Minecraft Launcher öffnen',
+      started: 'Minecraft Launcher wird gestartet…',
+      notFound: 'Minecraft Launcher wurde auf diesem Computer nicht gefunden',
+    },
+    theme: {
+      toLight: 'Zum hellen Design wechseln',
+      toDark: 'Zum dunklen Design wechseln',
+    },
     tabs: {
       mods: 'Mods',
       resourcepacks: 'Ressourcenpakete',

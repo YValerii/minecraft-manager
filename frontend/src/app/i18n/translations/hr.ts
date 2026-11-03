@@ -5,6 +5,16 @@ export const hr = {
   app: {
     sectionsAriaLabel: 'Odjeljci',
     settingsLink: 'Postavke',
+    launcher: {
+      label: 'Launcher',
+      title: 'Otvori Minecraft Launcher',
+      started: 'Minecraft Launcher se pokreće…',
+      notFound: 'Minecraft Launcher nije pronađen na ovom računalu',
+    },
+    theme: {
+      toLight: 'Prebaci na svijetlu temu',
+      toDark: 'Prebaci na tamnu temu',
+    },
     tabs: {
       mods: 'Modovi',
       resourcepacks: 'Paketi resursa',

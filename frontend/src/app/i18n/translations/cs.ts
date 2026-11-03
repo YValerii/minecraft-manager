@@ -5,6 +5,16 @@ export const cs = {
   app: {
     sectionsAriaLabel: 'Sekce',
     settingsLink: 'Nastavení',
+    launcher: {
+      label: 'Launcher',
+      title: 'Otevřít Minecraft Launcher',
+      started: 'Minecraft Launcher se spouští…',
+      notFound: 'Minecraft Launcher nebyl v tomto počítači nalezen',
+    },
+    theme: {
+      toLight: 'Přepnout na světlý motiv',
+      toDark: 'Přepnout na tmavý motiv',
+    },
     tabs: {
       mods: 'Módy',
       resourcepacks: 'Balíčky zdrojů',

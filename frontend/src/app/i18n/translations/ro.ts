@@ -5,6 +5,16 @@ export const ro = {
   app: {
     sectionsAriaLabel: 'Secțiuni',
     settingsLink: 'Setări',
+    launcher: {
+      label: 'Launcher',
+      title: 'Deschide Minecraft Launcher',
+      started: 'Minecraft Launcher pornește…',
+      notFound: 'Minecraft Launcher nu a fost găsit pe acest computer',
+    },
+    theme: {
+      toLight: 'Comută la tema deschisă',
+      toDark: 'Comută la tema închisă',
+    },
     tabs: {
       mods: 'Moduri',
       resourcepacks: 'Pachete de resurse',

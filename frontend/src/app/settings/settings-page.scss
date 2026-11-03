@@ -65,7 +65,7 @@ label {
     gap: 8px;
     align-items: baseline;
     padding: 6px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--line-subtle);
   }
   .mark.ok {
     color: var(--accent);

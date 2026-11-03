@@ -1,12 +1,14 @@
 'use strict';
 
-const { app, BrowserWindow, Menu, dialog, net, shell } = require('electron');
+const { app, BrowserWindow, Menu, dialog, nativeTheme, net, shell } = require('electron');
 const { spawn } = require('node:child_process');
 const fs = require('node:fs');
 const netSocket = require('node:net');
 const path = require('node:path');
 
 const BACKEND_START_TIMEOUT_MS = 60_000;
+// localStorage is per origin, so the UI's saved theme and language only survive a restart if the port stays the same.
+const PREFERRED_PORT = 38517;
 // CI launches the packaged app with this set: it checks the UI can reach the backend, then exits.
 const SMOKE_TEST = process.env.MCM_SMOKE_TEST === '1';
 
@@ -21,15 +23,20 @@ function backendOrigin() {
   return `http://127.0.0.1:${backendPort}`;
 }
 
-function freePort() {
+function listenAndRelease(port) {
   return new Promise((resolve, reject) => {
     const server = netSocket.createServer();
     server.once('error', reject);
-    server.listen(0, '127.0.0.1', () => {
-      const { port } = server.address();
-      server.close(() => resolve(port));
+    server.listen(port, '127.0.0.1', () => {
+      const { port: bound } = server.address();
+      server.close(() => resolve(bound));
     });
   });
+}
+
+/** PREFERRED_PORT if it's free, otherwise whichever port the OS picks. */
+function choosePort() {
+  return listenAndRelease(PREFERRED_PORT).catch(() => listenAndRelease(0));
 }
 
 function fail(message) {
@@ -115,7 +122,7 @@ function createWindow() {
     minWidth: 480,
     minHeight: 400,
     show: false,
-    backgroundColor: '#12151a',
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#12151a' : '#f4f6f8',
     title: 'Minecraft Manager',
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
@@ -170,7 +177,7 @@ async function launch() {
   createWindow();
   await mainWindow.loadFile(path.join(__dirname, 'loading.html'));
 
-  backendPort = await freePort();
+  backendPort = await choosePort();
   const logFile = startBackend(backendPort);
   if (!(await waitForBackend(backendPort, logFile)) || !mainWindow) {
     return;

@@ -5,6 +5,16 @@ export const et = {
   app: {
     sectionsAriaLabel: 'Jaotised',
     settingsLink: 'Seaded',
+    launcher: {
+      label: 'Käivitaja',
+      title: 'Ava Minecraft Launcher',
+      started: 'Minecraft Launcher käivitub…',
+      notFound: 'Minecraft Launcherit ei leitud selles arvutis',
+    },
+    theme: {
+      toLight: 'Lülitu heledale teemale',
+      toDark: 'Lülitu tumedale teemale',
+    },
     tabs: {
       mods: 'Modid',
       resourcepacks: 'Ressursipaketid',

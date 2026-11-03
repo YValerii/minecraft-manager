@@ -6,6 +6,17 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <script>
+    // Runs before the first paint: the saved theme, otherwise the one the system prefers.
+    (function () {
+      var saved = null;
+      try {
+        saved = localStorage.getItem('mcmanager.theme');
+      } catch (e) {}
+      var prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+      document.documentElement.dataset.theme = saved || (prefersLight ? 'light' : 'dark');
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

@@ -7,6 +7,7 @@ import {
   ContentList,
   ContentType,
   InstallResult,
+  LauncherStatus,
   PathInfo,
   Settings,
   UpdatesResult,
@@ -29,6 +30,15 @@ export class ApiService {
 
   paths(): Observable<PathInfo[]> {
     return this.http.get<PathInfo[]>('/api/settings/paths');
+  }
+
+  // ---- Minecraft Launcher
+  launcherStatus(): Observable<LauncherStatus> {
+    return this.http.get<LauncherStatus>('/api/launcher');
+  }
+
+  launchMinecraft(): Observable<void> {
+    return this.http.post<void>('/api/launcher/launch', {});
   }
 
   // ---- mods / resource packs / datapacks / shaders

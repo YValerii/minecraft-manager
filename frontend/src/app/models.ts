@@ -116,3 +116,7 @@ export interface WorldDetails {
   dimensions: string[];
   gameRules: Record<string, unknown> | null;
 }
+
+export interface LauncherStatus {
+  available: boolean;
+}

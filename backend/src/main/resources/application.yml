@@ -19,3 +19,5 @@ app:
   cache-ttl-minutes: 60
   # Where settings.json and identity-cache.json are stored.
   data-dir: ${APP_DATA_DIR:./data}
+  # Empty = look for Minecraft Launcher in its usual install locations.
+  launcher-path: ${APP_LAUNCHER_PATH:}

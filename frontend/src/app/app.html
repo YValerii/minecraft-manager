@@ -11,6 +11,20 @@
         </a>
       }
     </nav>
+    <button
+      type="button"
+      class="btn primary small launch"
+      [disabled]="!launcherAvailable() || launching()"
+      [title]="i18n.t(launcherAvailable() ? 'app.launcher.title' : 'app.launcher.notFound')"
+      (click)="launchMinecraft()"
+    >
+      @if (launching()) {
+        <span class="spin" aria-hidden="true"></span>
+      } @else {
+        <span aria-hidden="true">▶</span>
+      }
+      {{ i18n.t('app.launcher.label') }}
+    </button>
     <a class="tab settings" routerLink="/settings" routerLinkActive="active">
       <span class="emoji" aria-hidden="true">⚙️</span>{{ i18n.t('app.settingsLink') }}
     </a>
@@ -19,9 +33,22 @@
         <option [value]="l.code" [selected]="l.code === i18n.lang()">{{ l.name }}</option>
       }
     </select>
+    <button
+      type="button"
+      class="btn small theme-toggle"
+      [title]="i18n.t(theme.theme() === 'dark' ? 'app.theme.toLight' : 'app.theme.toDark')"
+      [attr.aria-label]="i18n.t(theme.theme() === 'dark' ? 'app.theme.toLight' : 'app.theme.toDark')"
+      (click)="theme.toggle()"
+    >
+      <span aria-hidden="true">{{ theme.theme() === 'dark' ? '☀️' : '🌙' }}</span>
+    </button>
   </div>
 </header>
 
 <main class="content">
   <router-outlet />
 </main>
+
+@if (toast(); as t) {
+  <p class="banner toast" [class.ok]="t.kind === 'ok'" [class.error]="t.kind === 'error'" role="status">{{ t.text }}</p>
+}

@@ -5,6 +5,16 @@ export const sv = {
   app: {
     sectionsAriaLabel: 'Avsnitt',
     settingsLink: 'Inställningar',
+    launcher: {
+      label: 'Launcher',
+      title: 'Öppna Minecraft Launcher',
+      started: 'Minecraft Launcher startar…',
+      notFound: 'Minecraft Launcher hittades inte på den här datorn',
+    },
+    theme: {
+      toLight: 'Byt till ljust tema',
+      toDark: 'Byt till mörkt tema',
+    },
     tabs: {
       mods: 'Moddar',
       resourcepacks: 'Resurspaket',

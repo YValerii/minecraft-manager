@@ -5,6 +5,16 @@ export const lv = {
   app: {
     sectionsAriaLabel: 'Sadaļas',
     settingsLink: 'Iestatījumi',
+    launcher: {
+      label: 'Palaidējs',
+      title: 'Atvērt Minecraft Launcher',
+      started: 'Minecraft Launcher tiek palaists…',
+      notFound: 'Minecraft Launcher šajā datorā nav atrasts',
+    },
+    theme: {
+      toLight: 'Pārslēgt uz gaišo motīvu',
+      toDark: 'Pārslēgt uz tumšo motīvu',
+    },
     tabs: {
       mods: 'Modi',
       resourcepacks: 'Resursu pakotnes',

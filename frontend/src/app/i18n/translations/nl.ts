@@ -5,6 +5,16 @@ export const nl = {
   app: {
     sectionsAriaLabel: 'Secties',
     settingsLink: 'Instellingen',
+    launcher: {
+      label: 'Launcher',
+      title: 'Minecraft Launcher openen',
+      started: 'Minecraft Launcher wordt gestart…',
+      notFound: 'Minecraft Launcher is niet gevonden op deze computer',
+    },
+    theme: {
+      toLight: 'Overschakelen naar licht thema',
+      toDark: 'Overschakelen naar donker thema',
+    },
     tabs: {
       mods: 'Mods',
       resourcepacks: 'Bronpakketten',

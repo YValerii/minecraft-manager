@@ -1,11 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatTooltip } from '@angular/material/tooltip';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 
 import { ApiService } from '../api.service';
 import { I18nService } from '../i18n/i18n.service';
 import { ContentItem, ContentList, ContentType, InstallResult, Settings, UpdateItem, UpdatesResult } from '../models';
+import { ConfirmService } from '../shared/confirm.service';
 import { ContentPage } from './content-page';
 
 function item(id: string, overrides: Partial<ContentItem> = {}): ContentItem {
@@ -53,6 +56,7 @@ describe('ContentPage', () => {
     localIconUrl: ReturnType<typeof vi.fn>;
   };
   let i18n: I18nService;
+  let confirm: ReturnType<typeof vi.fn>;
 
   async function settle(fixture: ComponentFixture<ContentPage>): Promise<void> {
     for (let i = 0; i < 4; i++) {
@@ -77,7 +81,7 @@ describe('ContentPage', () => {
   const q = (f: ComponentFixture<ContentPage>, selector: string): HTMLElement => f.nativeElement.querySelector(selector);
   const names = (f: ComponentFixture<ContentPage>): (string | undefined)[] =>
     Array.from<HTMLElement>(f.nativeElement.querySelectorAll('article h3')).map((h) => h.textContent?.trim());
-  const refreshButton = (f: ComponentFixture<ContentPage>) => q(f, '.actions .btn:not(.primary)') as HTMLButtonElement;
+  const refreshButton = (f: ComponentFixture<ContentPage>) => q(f, '.actions .refresh') as HTMLButtonElement;
 
   function serve(list: ContentList, updates: UpdatesResult = updatesOf()): void {
     api.list.mockReturnValue(of(list));
@@ -93,12 +97,17 @@ describe('ContentPage', () => {
       installAll: vi.fn(),
       localIconUrl: vi.fn((type: string, id: string) => `/icon/${type}/${id}`),
     };
-    TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: ApiService, useValue: api }] });
+    confirm = vi.fn(async () => true);
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: ApiService, useValue: api },
+        { provide: ConfirmService, useValue: { ask: confirm } },
+      ],
+    });
     i18n = TestBed.inject(I18nService);
     i18n.lang.set('en');
   });
-
-  afterEach(() => vi.unstubAllGlobals());
 
   describe('loading', () => {
     it('loads the files, settings and update status', async () => {
@@ -230,7 +239,7 @@ describe('ContentPage', () => {
       const fixture = await create();
 
       expect(names(fixture)).toEqual(['Sodium', 'Iris', 'Lithium']);
-      expect(buttons(fixture)[0].classList).toContain('on');
+      expect(buttons(fixture)[0].getAttribute('aria-checked')).toBe('true');
     });
 
     it('searches names, ignoring case and spaces', async () => {
@@ -256,7 +265,7 @@ describe('ContentPage', () => {
 
       await searchFor(fixture, 'no such mod');
 
-      expect(q(fixture, '.items .empty').textContent).toContain(i18n.t('content.nothingFound'));
+      expect(q(fixture, '.empty').textContent).toContain(i18n.t('content.nothingFound'));
     });
 
     it('filters to files with updates', async () => {
@@ -266,7 +275,7 @@ describe('ContentPage', () => {
       await settle(fixture);
 
       expect(names(fixture)).toEqual(['Sodium']);
-      expect(buttons(fixture)[1].classList).toContain('on');
+      expect(buttons(fixture)[1].getAttribute('aria-checked')).toBe('true');
       expect(buttons(fixture)[1].querySelector('b')?.textContent).toBe('1');
     });
 
@@ -432,7 +441,7 @@ describe('ContentPage', () => {
       const fixture = await create();
       api.list.mockClear();
 
-      (q(fixture, '.side .btn.primary') as HTMLButtonElement).click();
+      (q(fixture, '.side .update') as HTMLButtonElement).click();
       await settle(fixture);
 
       expect(api.install).toHaveBeenCalledWith('mods', 'a');
@@ -450,7 +459,7 @@ describe('ContentPage', () => {
 
       expect(page.busy().has('a')).toBe(true);
       expect(q(fixture, '.side').textContent).toContain(i18n.t('content.updating'));
-      expect((q(fixture, '.actions .btn.primary') as HTMLButtonElement).disabled).toBe(true);
+      expect((q(fixture, '.actions .update-all') as HTMLButtonElement).disabled).toBe(true);
 
       pending.next(OK);
       pending.complete();
@@ -527,12 +536,9 @@ describe('ContentPage', () => {
   });
 
   describe('update all', () => {
-    let confirm: ReturnType<typeof vi.fn>;
-    const updateAll = (f: ComponentFixture<ContentPage>) => q(f, '.actions .btn.primary') as HTMLButtonElement;
+    const updateAll = (f: ComponentFixture<ContentPage>) => q(f, '.actions .update-all') as HTMLButtonElement;
 
     beforeEach(() => {
-      confirm = vi.fn(() => true);
-      vi.stubGlobal('confirm', confirm);
       serve(listOf(item('a'), item('b')), updatesOf(update('a', 'UPDATE_AVAILABLE'), update('b', 'UPDATE_AVAILABLE')));
     });
 
@@ -554,7 +560,7 @@ describe('ContentPage', () => {
     });
 
     it('asks first and does nothing when declined', async () => {
-      confirm.mockReturnValue(false);
+      confirm.mockResolvedValue(false);
       const fixture = await create();
 
       updateAll(fixture).click();
@@ -644,6 +650,8 @@ describe('ContentPage', () => {
 
   describe('status badges', () => {
     const side = (f: ComponentFixture<ContentPage>) => q(f, '.side');
+    const tooltip = (f: ComponentFixture<ContentPage>, selector: string): string =>
+      f.debugElement.query(By.css(selector)).injector.get(MatTooltip).message;
 
     it('offers an update with its version and changelog', async () => {
       serve(listOf(item('a')), updatesOf(update('a', 'UPDATE_AVAILABLE')));
@@ -652,14 +660,14 @@ describe('ContentPage', () => {
       expect(q(fixture, 'article').classList).toContain('has-update');
       const badge = side(fixture).querySelector('.badge.warn') as HTMLElement;
       expect(badge.textContent).toContain(i18n.t('content.updateAvailableArrow', { version: '2.0' }));
-      expect(badge.title).toBe('notes');
+      expect(tooltip(fixture, '.side .badge.warn')).toBe('notes');
     });
 
     it('copes with an update without a changelog', async () => {
       serve(listOf(item('a')), updatesOf(update('a', 'UPDATE_AVAILABLE', { changelog: null })));
       const fixture = await create();
 
-      expect((side(fixture).querySelector('.badge.warn') as HTMLElement).title).toBe('');
+      expect(tooltip(fixture, '.side .badge.warn')).toBe('');
     });
 
     it('shows up to date', async () => {

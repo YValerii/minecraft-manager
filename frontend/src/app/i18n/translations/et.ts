@@ -1,9 +1,15 @@
 export const et = {
+  common: {
+    confirm: 'Kinnita',
+    cancel: 'Tühista',
+    clear: 'Tühjenda',
+  },
   langSwitcher: {
     ariaLabel: 'Keel',
   },
   app: {
     sectionsAriaLabel: 'Jaotised',
+    openNav: 'Ava navigeerimine',
     settingsLink: 'Seaded',
     launcher: {
       label: 'Käivitaja',
@@ -54,7 +60,7 @@ export const et = {
     folderUnit: 'kaust',
     updateBtn: 'Uuenda',
     updateAvailableArrow: 'Uuendus saadaval → {version}',
-    upToDate: '✓ Uusim versioon',
+    upToDate: 'Uusim versioon',
     noCompatibleTitle: 'Saidil pole teie seadetele vastavat versiooni',
     noCompatible: 'Versiooni {version} jaoks puudub',
     directoryHashTitle: 'Kaustu ei saa räsi järgi kontrollida',
@@ -91,6 +97,8 @@ export const et = {
     curseforgeKeyHint:
       'Tasuta võti: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Ilma API-võtmeta CurseForge andmeid ei laadita.',
+    showKey: 'Näita võtit',
+    hideKey: 'Peida võti',
     foldersSection: 'Kaustad',
     foldersHint: 'Suhtelised teed arvestatakse Minecrafti kaustast, absoluutseid kasutatakse muutmata kujul.',
     modsLabel: 'Modid',
@@ -120,6 +128,11 @@ export const et = {
     loadingLevelDat: 'level.dat lugemine…',
     gameRulesHeading: 'Mängureeglid ({count})',
     allDataSummary: 'Kõik level.dat andmed (NBT)',
+    filterRules: 'Filtreeri reegleid…',
+    tabs: {
+      overview: 'Ülevaade',
+      raw: 'NBT-andmed',
+    },
     loadingRaw: 'Laadimine…',
     rawError: 'Viga: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const et = {
     blocksFormat: '{size} plokki',
     edit: {
       enable: 'Luba muutmine',
-      disable: 'Keela muutmine',
       warning: 'Enne salvestamist sulge see maailm Minecraftis. Iga muudetud faili eelmine versioon säilitatakse järelliitega _old.',
       resetIcon: 'Lähtesta ikoon',
       resetIconHint: 'Minecraft loob uue ikooni, kui seda maailma järgmine kord mängitakse.',

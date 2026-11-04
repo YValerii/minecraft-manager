@@ -1,9 +1,15 @@
 export const hr = {
+  common: {
+    confirm: 'Potvrdi',
+    cancel: 'Odustani',
+    clear: 'Očisti',
+  },
   langSwitcher: {
     ariaLabel: 'Jezik',
   },
   app: {
     sectionsAriaLabel: 'Odjeljci',
+    openNav: 'Otvori navigaciju',
     settingsLink: 'Postavke',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const hr = {
     folderUnit: 'mapa',
     updateBtn: 'Ažuriraj',
     updateAvailableArrow: 'Dostupno ažuriranje → {version}',
-    upToDate: '✓ Najnovija verzija',
+    upToDate: 'Najnovija verzija',
     noCompatibleTitle: 'Stranica nema verziju koja odgovara vašim postavkama',
     noCompatible: 'Nema verzije za {version}',
     directoryHashTitle: 'Mape se ne mogu provjeriti pomoću hasha',
@@ -91,6 +97,8 @@ export const hr = {
     curseforgeKeyHint:
       'Besplatan ključ: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Bez API ključa podaci s CurseForgea neće se učitati.',
+    showKey: 'Prikaži ključ',
+    hideKey: 'Sakrij ključ',
     foldersSection: 'Mape',
     foldersHint: 'Relativne putanje računaju se od mape Minecrafta, a apsolutne se koriste nepromijenjene.',
     modsLabel: 'Modovi',
@@ -120,6 +128,11 @@ export const hr = {
     loadingLevelDat: 'Čitanje level.dat…',
     gameRulesHeading: 'Pravila igre ({count})',
     allDataSummary: 'Svi podaci iz level.dat (NBT)',
+    filterRules: 'Filtriraj pravila…',
+    tabs: {
+      overview: 'Pregled',
+      raw: 'NBT podaci',
+    },
     loadingRaw: 'Učitavanje…',
     rawError: 'Pogreška: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const hr = {
     blocksFormat: 'Blokovi: {size}',
     edit: {
       enable: 'Omogući uređivanje',
-      disable: 'Onemogući uređivanje',
       warning: 'Prije spremanja zatvorite ovaj svijet u Minecraftu. Prethodna verzija svake promijenjene datoteke čuva se s nastavkom _old.',
       resetIcon: 'Vrati ikonu',
       resetIconHint: 'Minecraft će stvoriti novu ikonu sljedeći put kad se ovaj svijet igra.',

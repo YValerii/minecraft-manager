@@ -1,92 +1,81 @@
 :host {
   display: block;
-  max-width: 860px;
+  max-width: 880px;
+  margin-inline: auto;
 }
 
 .card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px 20px 20px;
   margin-bottom: 16px;
+  padding: 20px;
 
   h2 {
-    font-size: 17px;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
+    font: var(--mat-sys-title-medium);
   }
   .hint {
-    color: var(--muted);
-    font-size: 13.5px;
-    margin: -4px 0 12px;
+    margin: -8px 0 16px;
+    color: var(--mat-sys-on-surface-variant);
   }
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 18px;
+  align-items: start;
+  gap: 16px;
 
   .wide {
     grid-column: 1 / -1;
   }
 }
 
-label {
+.inline {
+  margin: 16px 0 0;
+}
+
+.form-actions {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-
-  span {
-    font-weight: 600;
-    font-size: 13.5px;
-  }
-  small {
-    color: var(--muted);
-    font-size: 12.5px;
-  }
-}
-
-.banner.inline {
-  margin: 14px 0 0;
-}
-
-.actions {
+  justify-content: flex-end;
   margin-bottom: 24px;
 }
 
-.resolved ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-
+.resolved {
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
   li {
     display: grid;
-    grid-template-columns: 22px 150px minmax(0, 1fr);
-    gap: 8px;
-    align-items: baseline;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--line-subtle);
+    grid-template-columns: 24px 160px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+
+    & + li {
+      border-top: 1px solid var(--mat-sys-outline-variant);
+    }
   }
   .mark.ok {
-    color: var(--accent);
+    color: var(--app-success);
   }
   .mark.bad {
-    color: var(--danger);
+    color: var(--mat-sys-error);
   }
   .lbl {
-    color: var(--muted);
+    color: var(--mat-sys-on-surface-variant);
   }
   code {
-    word-break: break-all;
+    overflow-wrap: anywhere;
   }
 }
 
 @media (max-width: 640px) {
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .resolved li {
-    grid-template-columns: 22px minmax(0, 1fr);
+    grid-template-columns: 24px minmax(0, 1fr);
 
     code {
       grid-column: 2;

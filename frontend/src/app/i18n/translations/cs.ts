@@ -1,9 +1,15 @@
 export const cs = {
+  common: {
+    confirm: 'Potvrdit',
+    cancel: 'Zrušit',
+    clear: 'Vymazat',
+  },
   langSwitcher: {
     ariaLabel: 'Jazyk',
   },
   app: {
     sectionsAriaLabel: 'Sekce',
+    openNav: 'Otevřít navigaci',
     settingsLink: 'Nastavení',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const cs = {
     folderUnit: 'složka',
     updateBtn: 'Aktualizovat',
     updateAvailableArrow: 'Dostupná aktualizace → {version}',
-    upToDate: '✓ Nejnovější verze',
+    upToDate: 'Nejnovější verze',
     noCompatibleTitle: 'Web nemá žádnou verzi odpovídající vašemu nastavení',
     noCompatible: 'Žádná verze pro {version}',
     directoryHashTitle: 'Složky nelze ověřit pomocí hashe',
@@ -91,6 +97,8 @@ export const cs = {
     curseforgeKeyHint:
       'Bezplatný klíč: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Bez klíče API se data z CurseForge nenačtou.',
+    showKey: 'Zobrazit klíč',
+    hideKey: 'Skrýt klíč',
     foldersSection: 'Složky',
     foldersHint: 'Relativní cesty vycházejí ze složky Minecraftu, absolutní se použijí beze změny.',
     modsLabel: 'Módy',
@@ -120,6 +128,11 @@ export const cs = {
     loadingLevelDat: 'Načítání level.dat…',
     gameRulesHeading: 'Herní pravidla ({count})',
     allDataSummary: 'Všechna data level.dat (NBT)',
+    filterRules: 'Filtrovat pravidla…',
+    tabs: {
+      overview: 'Přehled',
+      raw: 'Data NBT',
+    },
     loadingRaw: 'Načítání…',
     rawError: 'Chyba: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const cs = {
     blocksFormat: 'Bloky: {size}',
     edit: {
       enable: 'Povolit úpravy',
-      disable: 'Zakázat úpravy',
       warning: 'Před uložením tento svět v Minecraftu zavřete. Předchozí verze každého změněného souboru se uchová s příponou _old.',
       resetIcon: 'Obnovit ikonu',
       resetIconHint: 'Minecraft pořídí novou ikonu při příštím hraní tohoto světa.',

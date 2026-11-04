@@ -1,9 +1,15 @@
 export const en = {
+  common: {
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+    clear: 'Clear',
+  },
   langSwitcher: {
     ariaLabel: 'Language',
   },
   app: {
     sectionsAriaLabel: 'Sections',
+    openNav: 'Open navigation',
     settingsLink: 'Settings',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const en = {
     folderUnit: 'folder',
     updateBtn: 'Update',
     updateAvailableArrow: 'Update available → {version}',
-    upToDate: '✓ Latest version',
+    upToDate: 'Latest version',
     noCompatibleTitle: "The site has no version matching your settings",
     noCompatible: 'No version for {version}',
     directoryHashTitle: "Folders can't be checked by hash",
@@ -91,6 +97,8 @@ export const en = {
     curseforgeKeyHint:
       'Free key: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Without an API key, CurseForge data will not load.',
+    showKey: 'Show key',
+    hideKey: 'Hide key',
     foldersSection: 'Folders',
     foldersHint: 'Relative paths are resolved from the Minecraft folder, absolute paths are used as-is.',
     modsLabel: 'Mods',
@@ -120,6 +128,11 @@ export const en = {
     loadingLevelDat: 'Reading level.dat…',
     gameRulesHeading: 'Game rules ({count})',
     allDataSummary: 'All level.dat data (NBT)',
+    filterRules: 'Filter rules…',
+    tabs: {
+      overview: 'Overview',
+      raw: 'NBT data',
+    },
     loadingRaw: 'Loading…',
     rawError: 'Error: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const en = {
     blocksFormat: '{size} blocks',
     edit: {
       enable: 'Enable editing',
-      disable: 'Disable editing',
       warning: 'Close this world in Minecraft before saving. The previous version of each changed file is kept with the suffix _old.',
       resetIcon: 'Reset icon',
       resetIconHint: 'Minecraft takes a new icon the next time the world is played.',

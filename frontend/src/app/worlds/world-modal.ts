@@ -1,5 +1,19 @@
-import { Component, HostListener, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
-import { Observable, firstValueFrom } from 'rxjs';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatOption } from '@angular/material/core';
+import { MatDialogRef } from '@angular/material/dialog';
+import { MatFormField, MatLabel, MatPrefix } from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
+import { MatInput } from '@angular/material/input';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatSelect } from '@angular/material/select';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { MatTab, MatTabGroup } from '@angular/material/tabs';
+import { MatTooltip } from '@angular/material/tooltip';
+import { Observable, firstValueFrom, merge } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 import { ApiService, errorMessage } from '../api.service';
 import {
@@ -13,6 +27,8 @@ import {
 } from '../format';
 import { I18nService } from '../i18n/i18n.service';
 import { WorldDetails, WorldEdit } from '../models';
+import { Banner } from '../shared/banner';
+import { ConfirmService } from '../shared/confirm.service';
 
 interface Row {
   label: string;
@@ -36,15 +52,34 @@ interface Draft {
 
 @Component({
   selector: 'app-world-modal',
+  imports: [
+    Banner,
+    MatButton,
+    MatCheckbox,
+    MatFormField,
+    MatIcon,
+    MatIconButton,
+    MatInput,
+    MatLabel,
+    MatOption,
+    MatPrefix,
+    MatProgressSpinner,
+    MatSelect,
+    MatSlideToggle,
+    MatTab,
+    MatTabGroup,
+    MatTooltip,
+  ],
   templateUrl: './world-modal.html',
   styleUrl: './world-modal.scss',
 })
 export class WorldModal {
   private readonly api = inject(ApiService);
+  private readonly dialogRef = inject(MatDialogRef<WorldModal>);
+  private readonly confirm = inject(ConfirmService);
   readonly i18n = inject(I18nService);
 
   readonly folder = input.required<string>();
-  readonly closed = output<void>();
   /** The world on disk changed, so anything showing it is out of date. */
   readonly changed = output<void>();
 
@@ -57,11 +92,16 @@ export class WorldModal {
   readonly rawLoading = signal(false);
   private rawOpen = false;
 
+  readonly tabIndex = signal(0);
+  readonly ruleFilter = signal('');
+
   /** Editing is off until asked for, and goes back to off after saving: null means read-only. */
   readonly draft = signal<Draft | null>(null);
   readonly busy = signal(false);
   readonly editError = signal<string | null>(null);
   readonly saved = signal(false);
+
+  private closing = false;
 
   readonly iconUrl = computed(() => this.api.worldIconUrl(this.folder()));
   // Also checks hasIcon, since the browser may have the icon cached for a while after it is reset.
@@ -77,6 +117,14 @@ export class WorldModal {
       .map(([name, value]) => ({ name, value: String(value) }))
       .sort((a, b) => a.name.localeCompare(b.name));
   });
+
+  readonly visibleRules = computed(() => {
+    const query = this.ruleFilter().trim().toLowerCase();
+    return this.gameRules().filter((g) => g.name.toLowerCase().includes(query));
+  });
+
+  /** The raw data is the last tab, and the game rules tab only exists when there are rules. */
+  readonly rawTabIndex = computed(() => (this.gameRules().length > 0 ? 2 : 1));
 
   /** Only what differs from the world as loaded. */
   readonly changes = computed<WorldEdit>(() => {
@@ -208,6 +256,11 @@ export class WorldModal {
       const folder = this.folder();
       untracked(() => void this.load(folder));
     });
+
+    // The dialog stays open on Escape and on clicks outside it until unsaved edits have been dealt with.
+    merge(this.dialogRef.backdropClick(), this.dialogRef.keydownEvents().pipe(filter((e) => e.key === 'Escape')))
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => void this.close());
   }
 
   private async load(folder: string): Promise<void> {
@@ -216,6 +269,8 @@ export class WorldModal {
     this.details.set(null);
     this.raw.set(null);
     this.rawOpen = false;
+    this.tabIndex.set(0);
+    this.ruleFilter.set('');
     this.iconBroken.set(false);
     this.draft.set(null);
     this.editError.set(null);
@@ -230,9 +285,10 @@ export class WorldModal {
     }
   }
 
-  /** The full level.dat tree is only loaded once the section is expanded. */
-  async onRawToggle(event: Event): Promise<void> {
-    this.rawOpen = (event.target as HTMLDetailsElement).open;
+  /** The full level.dat tree is only loaded once its tab is opened. */
+  async onTab(index: number): Promise<void> {
+    this.tabIndex.set(index);
+    this.rawOpen = index === this.rawTabIndex();
     if (!this.rawOpen || this.raw() !== null || this.rawLoading()) return;
     await this.loadRaw();
   }
@@ -251,10 +307,14 @@ export class WorldModal {
 
   // ---- editing
 
-  toggleEditing(): void {
+  /** `toggle` is the switch that was flipped, which has to flip back if the edits end up being kept. */
+  async toggleEditing(toggle?: MatSlideToggle): Promise<void> {
     const d = this.details();
     if (this.draft()) {
-      if (!this.confirmDiscard()) return;
+      if (!(await this.confirmDiscard())) {
+        if (toggle) toggle.checked = true;
+        return;
+      }
       this.draft.set(null);
     } else if (d) {
       this.draft.set({
@@ -287,10 +347,6 @@ export class WorldModal {
     return (event.target as HTMLInputElement).value;
   }
 
-  checked(event: Event): boolean {
-    return (event.target as HTMLInputElement).checked;
-  }
-
   async save(): Promise<void> {
     if (!this.canSave()) return;
     if (await this.change(this.api.updateWorld(this.folder(), this.changes()))) {
@@ -300,7 +356,7 @@ export class WorldModal {
   }
 
   async resetIcon(): Promise<void> {
-    if (this.busy() || !confirm(this.i18n.t('worldModal.edit.resetIconConfirm'))) return;
+    if (this.busy() || !(await this.confirm.ask(this.i18n.t('worldModal.edit.resetIconConfirm')))) return;
     await this.change(this.api.resetWorldIcon(this.folder()));
   }
 
@@ -322,8 +378,8 @@ export class WorldModal {
     }
   }
 
-  private confirmDiscard(): boolean {
-    return !this.dirty() || confirm(this.i18n.t('worldModal.edit.discardConfirm'));
+  private async confirmDiscard(): Promise<boolean> {
+    return !this.dirty() || this.confirm.ask(this.i18n.t('worldModal.edit.discardConfirm'));
   }
 
   /** The known values, plus the current one if it is something else, so showing the form doesn't change it. */
@@ -332,13 +388,11 @@ export class WorldModal {
     return current === undefined || current in labels ? known : [{ value: current, label: current || '—' }, ...known];
   }
 
-  @HostListener('document:keydown.escape')
-  close(): void {
-    if (this.confirmDiscard()) this.closed.emit();
-  }
-
-  onBackdrop(event: MouseEvent): void {
-    if (event.target === event.currentTarget) this.close();
+  async close(): Promise<void> {
+    if (this.closing) return;
+    this.closing = true;
+    if (await this.confirmDiscard()) this.dialogRef.close();
+    this.closing = false;
   }
 }
 

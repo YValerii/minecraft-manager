@@ -1,9 +1,15 @@
 export const ro = {
+  common: {
+    confirm: 'Confirmă',
+    cancel: 'Anulează',
+    clear: 'Golește',
+  },
   langSwitcher: {
     ariaLabel: 'Limbă',
   },
   app: {
     sectionsAriaLabel: 'Secțiuni',
+    openNav: 'Deschide navigarea',
     settingsLink: 'Setări',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const ro = {
     folderUnit: 'dosar',
     updateBtn: 'Actualizează',
     updateAvailableArrow: 'Actualizare disponibilă → {version}',
-    upToDate: '✓ Cea mai recentă versiune',
+    upToDate: 'Cea mai recentă versiune',
     noCompatibleTitle: 'Site-ul nu are nicio versiune potrivită pentru setările dvs.',
     noCompatible: 'Nicio versiune pentru {version}',
     directoryHashTitle: 'Dosarele nu pot fi verificate prin hash',
@@ -91,6 +97,8 @@ export const ro = {
     curseforgeKeyHint:
       'Cheie gratuită: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Fără o cheie API, datele CurseForge nu se vor încărca.',
+    showKey: 'Afișează cheia',
+    hideKey: 'Ascunde cheia',
     foldersSection: 'Dosare',
     foldersHint: 'Căile relative pornesc din dosarul Minecraft, iar cele absolute sunt folosite ca atare.',
     modsLabel: 'Moduri',
@@ -120,6 +128,11 @@ export const ro = {
     loadingLevelDat: 'Se citește level.dat…',
     gameRulesHeading: 'Reguli de joc ({count})',
     allDataSummary: 'Toate datele din level.dat (NBT)',
+    filterRules: 'Filtrează regulile…',
+    tabs: {
+      overview: 'Prezentare generală',
+      raw: 'Date NBT',
+    },
     loadingRaw: 'Se încarcă…',
     rawError: 'Eroare: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const ro = {
     blocksFormat: 'Blocuri: {size}',
     edit: {
       enable: 'Activează editarea',
-      disable: 'Dezactivează editarea',
       warning: 'Închide această lume în Minecraft înainte de a salva. Versiunea anterioară a fiecărui fișier modificat este păstrată cu sufixul _old.',
       resetIcon: 'Resetează pictograma',
       resetIconHint: 'Minecraft va crea o pictogramă nouă data viitoare când se joacă această lume.',

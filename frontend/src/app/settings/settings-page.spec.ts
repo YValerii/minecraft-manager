@@ -1,5 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatTooltip } from '@angular/material/tooltip';
+import { By } from '@angular/platform-browser';
 import { of, Subject, throwError } from 'rxjs';
 
 import { ApiService } from '../api.service';
@@ -112,9 +114,10 @@ describe('SettingsPage', () => {
     expect(items).toHaveLength(2);
     expect(items[0].textContent).toContain('/mc');
     expect(items[0].querySelector('.mark')?.classList).toContain('ok');
-    expect((items[0].querySelector('.mark') as HTMLElement).title).toBe(i18n.t('settings.folderExistsTitle'));
+    const tooltips = fixture.debugElement.queryAll(By.css('.mark')).map((m) => m.injector.get(MatTooltip).message);
+    expect(tooltips).toEqual([i18n.t('settings.folderExistsTitle'), i18n.t('settings.folderMissingTitle')]);
+    expect(items[0].querySelector('.mark')?.getAttribute('aria-label')).toBe(i18n.t('settings.folderExistsTitle'));
     expect(items[1].querySelector('.mark')?.classList).toContain('bad');
-    expect((items[1].querySelector('.mark') as HTMLElement).title).toBe(i18n.t('settings.folderMissingTitle'));
   });
 
   it('hides the resolved folders when there are none', async () => {
@@ -122,6 +125,22 @@ describe('SettingsPage', () => {
     const fixture = await create();
 
     expect(fixture.nativeElement.querySelector('.resolved')).toBeNull();
+  });
+
+  it('hides the API key until asked to show it', async () => {
+    const fixture = await create();
+    const key: HTMLInputElement = fixture.nativeElement.querySelector('input[formControlName=curseforgeApiKey]');
+    const toggle: HTMLButtonElement = fixture.nativeElement.querySelector('button.toggle-key');
+
+    expect(key.type).toBe('password');
+    expect(toggle.getAttribute('aria-label')).toBe(i18n.t('settings.showKey'));
+
+    toggle.click();
+    await settle(fixture);
+
+    expect(key.type).toBe('text');
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    expect(toggle.getAttribute('aria-label')).toBe(i18n.t('settings.hideKey'));
   });
 
   describe('API key warning', () => {

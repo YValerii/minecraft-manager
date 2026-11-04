@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Minecraft Manager">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#25482b"/>
+      <stop offset="1" stop-color="#0f2015"/>
+    </linearGradient>
+    <linearGradient id="top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fe36f"/>
+      <stop offset="1" stop-color="#58b846"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+
+  <!-- Block: soil faces -->
+  <path d="M18 44 62 69v42L18 86z" fill="#7a4f2e"/>
+  <path d="M106 44 62 69v42l44-25z" fill="#996639"/>
+
+  <!-- Grass hanging over the soil, stepped like pixels -->
+  <path d="M18 44 62 69v16l-7-4v5l-8-4.500v8l-7-4v-8l-7-4v6l-8-4.500v-8L18 56z" fill="#3f9436"/>
+  <path d="M106 44 62 69v16l7-4v5l8-4.500v8l7-4v-8l7-4v6l8-4.500v-8l7-4z" fill="#4ca842"/>
+
+  <!-- Block: grass top -->
+  <path d="M62 19 106 44 62 69 18 44z" fill="url(#top)"/>
+  <path d="m49 34 9 5-9 5-9-5zm27 4 9 5-9 5-9-5zm-14 14 7 4-7 4-7-4z" fill="#a9ee8b" opacity=".55"/>
+
+  <!-- Update badge -->
+  <circle cx="96" cy="96" r="24" fill="#0f2015"/>
+  <circle cx="96" cy="96" r="20" fill="#f4fbef"/>
+  <path d="M96 84 84.500 95.500h7.500V108h8V95.500h7.500z" fill="#2c7a2e"/>
+</svg>

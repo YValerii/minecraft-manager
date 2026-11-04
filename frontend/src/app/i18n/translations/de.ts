@@ -1,9 +1,15 @@
 export const de = {
+  common: {
+    confirm: 'Bestätigen',
+    cancel: 'Abbrechen',
+    clear: 'Leeren',
+  },
   langSwitcher: {
     ariaLabel: 'Sprache',
   },
   app: {
     sectionsAriaLabel: 'Bereiche',
+    openNav: 'Navigation öffnen',
     settingsLink: 'Einstellungen',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const de = {
     folderUnit: 'Ordner',
     updateBtn: 'Aktualisieren',
     updateAvailableArrow: 'Update verfügbar → {version}',
-    upToDate: '✓ Neueste Version',
+    upToDate: 'Neueste Version',
     noCompatibleTitle: 'Die Website hat keine Version, die zu deinen Einstellungen passt',
     noCompatible: 'Keine Version für {version}',
     directoryHashTitle: 'Ordner können nicht per Hash geprüft werden',
@@ -91,6 +97,8 @@ export const de = {
     curseforgeKeyHint:
       'Kostenloser Schlüssel: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Ohne API-Schlüssel werden keine CurseForge-Daten geladen.',
+    showKey: 'Schlüssel anzeigen',
+    hideKey: 'Schlüssel verbergen',
     foldersSection: 'Ordner',
     foldersHint: 'Relative Pfade gehen vom Minecraft-Ordner aus, absolute Pfade werden unverändert verwendet.',
     modsLabel: 'Mods',
@@ -120,6 +128,11 @@ export const de = {
     loadingLevelDat: 'level.dat wird gelesen…',
     gameRulesHeading: 'Spielregeln ({count})',
     allDataSummary: 'Alle level.dat-Daten (NBT)',
+    filterRules: 'Regeln filtern…',
+    tabs: {
+      overview: 'Übersicht',
+      raw: 'NBT-Daten',
+    },
     loadingRaw: 'Wird geladen…',
     rawError: 'Fehler: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const de = {
     blocksFormat: '{size} Blöcke',
     edit: {
       enable: 'Bearbeiten aktivieren',
-      disable: 'Bearbeiten deaktivieren',
       warning: 'Schließe diese Welt in Minecraft, bevor du speicherst. Die vorherige Version jeder geänderten Datei wird mit der Endung _old aufbewahrt.',
       resetIcon: 'Symbol zurücksetzen',
       resetIconHint: 'Minecraft erstellt ein neues Symbol, wenn die Welt das nächste Mal gespielt wird.',

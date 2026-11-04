@@ -1,9 +1,15 @@
 export const fr = {
+  common: {
+    confirm: 'Confirmer',
+    cancel: 'Annuler',
+    clear: 'Effacer',
+  },
   langSwitcher: {
     ariaLabel: 'Langue',
   },
   app: {
     sectionsAriaLabel: 'Sections',
+    openNav: 'Ouvrir la navigation',
     settingsLink: 'Paramètres',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const fr = {
     folderUnit: 'dossier',
     updateBtn: 'Mettre à jour',
     updateAvailableArrow: 'Mise à jour disponible → {version}',
-    upToDate: '✓ Dernière version',
+    upToDate: 'Dernière version',
     noCompatibleTitle: "Le site ne propose aucune version correspondant à vos paramètres",
     noCompatible: 'Aucune version pour {version}',
     directoryHashTitle: 'Les dossiers ne peuvent pas être vérifiés par hachage',
@@ -91,6 +97,8 @@ export const fr = {
     curseforgeKeyHint:
       'Clé gratuite : <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Sans clé API, les données de CurseForge ne seront pas chargées.',
+    showKey: 'Afficher la clé',
+    hideKey: 'Masquer la clé',
     foldersSection: 'Dossiers',
     foldersHint: 'Les chemins relatifs partent du dossier Minecraft, les chemins absolus sont utilisés tels quels.',
     modsLabel: 'Mods',
@@ -120,6 +128,11 @@ export const fr = {
     loadingLevelDat: 'Lecture de level.dat…',
     gameRulesHeading: 'Règles du jeu ({count})',
     allDataSummary: 'Toutes les données de level.dat (NBT)',
+    filterRules: 'Filtrer les règles…',
+    tabs: {
+      overview: 'Aperçu',
+      raw: 'Données NBT',
+    },
     loadingRaw: 'Chargement…',
     rawError: 'Erreur : {message}',
     sections: {
@@ -173,7 +186,6 @@ export const fr = {
     blocksFormat: '{size} blocs',
     edit: {
       enable: 'Activer la modification',
-      disable: 'Désactiver la modification',
       warning: "Fermez ce monde dans Minecraft avant d'enregistrer. La version précédente de chaque fichier modifié est conservée avec le suffixe _old.",
       resetIcon: "Réinitialiser l'icône",
       resetIconHint: 'Minecraft créera une nouvelle icône la prochaine fois que ce monde sera joué.',

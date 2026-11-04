@@ -1,9 +1,15 @@
 export const lv = {
+  common: {
+    confirm: 'Apstiprināt',
+    cancel: 'Atcelt',
+    clear: 'Notīrīt',
+  },
   langSwitcher: {
     ariaLabel: 'Valoda',
   },
   app: {
     sectionsAriaLabel: 'Sadaļas',
+    openNav: 'Atvērt navigāciju',
     settingsLink: 'Iestatījumi',
     launcher: {
       label: 'Palaidējs',
@@ -54,7 +60,7 @@ export const lv = {
     folderUnit: 'mape',
     updateBtn: 'Atjaunināt',
     updateAvailableArrow: 'Pieejams atjauninājums → {version}',
-    upToDate: '✓ Jaunākā versija',
+    upToDate: 'Jaunākā versija',
     noCompatibleTitle: 'Vietnē nav versijas, kas atbilst jūsu iestatījumiem',
     noCompatible: 'Nav versijas priekš {version}',
     directoryHashTitle: 'Mapes nevar pārbaudīt pēc jaucējvērtības',
@@ -91,6 +97,8 @@ export const lv = {
     curseforgeKeyHint:
       'Bezmaksas atslēga: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Bez API atslēgas CurseForge dati netiks ielādēti.',
+    showKey: 'Rādīt atslēgu',
+    hideKey: 'Slēpt atslēgu',
     foldersSection: 'Mapes',
     foldersHint: 'Relatīvie ceļi tiek rēķināti no Minecraft mapes, absolūtie tiek izmantoti nemainīti.',
     modsLabel: 'Modi',
@@ -120,6 +128,11 @@ export const lv = {
     loadingLevelDat: 'Nolasa level.dat…',
     gameRulesHeading: 'Spēles noteikumi ({count})',
     allDataSummary: 'Visi level.dat dati (NBT)',
+    filterRules: 'Filtrēt noteikumus…',
+    tabs: {
+      overview: 'Pārskats',
+      raw: 'NBT dati',
+    },
     loadingRaw: 'Ielādē…',
     rawError: 'Kļūda: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const lv = {
     blocksFormat: 'Bloki: {size}',
     edit: {
       enable: 'Ieslēgt rediģēšanu',
-      disable: 'Izslēgt rediģēšanu',
       warning: 'Pirms saglabāšanas aizveriet šo pasauli Minecraft. Katra mainītā faila iepriekšējā versija tiek saglabāta ar piedēkli _old.',
       resetIcon: 'Atiestatīt ikonu',
       resetIconHint: 'Minecraft izveidos jaunu ikonu, kad šajā pasaulē nākamreiz spēlēsiet.',

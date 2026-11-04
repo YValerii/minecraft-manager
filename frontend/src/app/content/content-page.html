@@ -1,7 +1,6 @@
 <header class="page-head">
   <div class="titles">
     <h1>
-      <span aria-hidden="true">{{ meta().emoji }}</span>
       {{ i18n.t(meta().titleKey) }}
       @if (list(); as l) {
         <span class="count">{{ l.items.length }}</span>
@@ -18,22 +17,24 @@
   </div>
 
   <div class="actions">
+    <button matButton="outlined" type="button" class="refresh" (click)="refresh()" [disabled]="loading() || checking() || installingAll()">
+      @if (checking() || loading()) {
+        <mat-spinner matButtonIcon class="spin" diameter="18" />
+      } @else {
+        <mat-icon svgIcon="refresh" aria-hidden="true" />
+      }
+      {{ i18n.t(checking() || loading() ? 'content.checking' : 'content.checkUpdates') }}
+    </button>
     @if (updateCount() > 0) {
-      <button class="btn primary" (click)="installAll()" [disabled]="installingAll() || busy().size > 0">
+      <button matButton="filled" type="button" class="update-all" (click)="installAll()" [disabled]="installingAll() || busy().size > 0">
         @if (installingAll()) {
-          <span class="spin"></span> {{ i18n.t('content.updating') }}
+          <mat-spinner matButtonIcon class="spin" diameter="18" />
         } @else {
-          ⬆ {{ i18n.t('content.updateAll', { count: updateCount() }) }}
+          <mat-icon svgIcon="upgrade" aria-hidden="true" />
         }
+        {{ installingAll() ? i18n.t('content.updating') : i18n.t('content.updateAll', { count: updateCount() }) }}
       </button>
     }
-    <button class="btn" (click)="refresh()" [disabled]="loading() || checking() || installingAll()">
-      @if (checking() || loading()) {
-        <span class="spin"></span> {{ i18n.t('content.checking') }}
-      } @else {
-        ⟳ {{ i18n.t('content.checkUpdates') }}
-      }
-    </button>
   </div>
 </header>
 
@@ -51,129 +52,166 @@
 }
 
 @if (error(); as e) {
-  <div class="banner error">{{ e }}</div>
+  <app-banner kind="error">{{ e }}</app-banner>
 }
 @if (notice(); as n) {
-  <div class="banner ok">{{ n }}</div>
+  <app-banner kind="ok">{{ n }}</app-banner>
 }
 @if (list()?.warning; as w) {
-  <div class="banner warn">⚠ {{ w }}</div>
+  <app-banner kind="warn">{{ w }}</app-banner>
 } @else if (updatesWarning(); as w) {
-  <div class="banner warn">⚠ {{ w }}</div>
+  <app-banner kind="warn">{{ w }}</app-banner>
 }
 
 @if (loading() && !list()) {
-  <div class="empty"><span class="spin"></span> {{ i18n.t('content.loadingFiles') }}</div>
+  <div class="empty"><mat-spinner class="spin" diameter="32" /> {{ i18n.t('content.loadingFiles') }}</div>
 } @else if (list(); as l) {
   @if (l.items.length === 0) {
-    <div class="empty">{{ i18n.t(meta().emptyKey) }}</div>
+    <div class="empty">
+      <mat-icon [svgIcon]="meta().icon" aria-hidden="true" />
+      {{ i18n.t(meta().emptyKey) }}
+    </div>
   } @else {
     <div class="toolbar">
-      <input
-        type="search"
-        [placeholder]="i18n.t('content.searchPlaceholder')"
-        [value]="search()"
-        (input)="onSearch($event)"
-      />
-      <div class="seg" role="group" [attr.aria-label]="i18n.t('content.filterAriaLabel')">
-        <button [class.on]="filter() === 'all'" (click)="filter.set('all')">{{ i18n.t('content.filterAll') }}</button>
-        <button [class.on]="filter() === 'updates'" (click)="filter.set('updates')">
-          {{ i18n.t('content.filterUpdates') }} @if (updateCount() > 0) { <b>{{ updateCount() }}</b> }
-        </button>
-        <button [class.on]="filter() === 'unknown'" (click)="filter.set('unknown')">
-          {{ i18n.t('content.filterUnknown') }} @if (unknownCount() > 0) { <b>{{ unknownCount() }}</b> }
-        </button>
-      </div>
+      <mat-form-field class="search" appearance="outline" subscriptSizing="dynamic">
+        <mat-icon matPrefix svgIcon="search" aria-hidden="true" />
+        <input
+          matInput
+          type="search"
+          [attr.aria-label]="i18n.t('content.searchPlaceholder')"
+          [placeholder]="i18n.t('content.searchPlaceholder')"
+          [value]="search()"
+          (input)="onSearch($event)"
+        />
+        @if (search()) {
+          <button matIconButton matSuffix type="button" class="clear-search" [attr.aria-label]="i18n.t('common.clear')" (click)="search.set('')">
+            <mat-icon svgIcon="close" />
+          </button>
+        }
+      </mat-form-field>
+
+      <mat-button-toggle-group
+        class="seg"
+        hideSingleSelectionIndicator
+        [attr.aria-label]="i18n.t('content.filterAriaLabel')"
+        [value]="filter()"
+        (change)="filter.set($event.value)"
+      >
+        <mat-button-toggle value="all">{{ i18n.t('content.filterAll') }}</mat-button-toggle>
+        <mat-button-toggle value="updates">
+          {{ i18n.t('content.filterUpdates') }}
+          @if (updateCount() > 0) {
+            <b>{{ updateCount() }}</b>
+          }
+        </mat-button-toggle>
+        <mat-button-toggle value="unknown">
+          {{ i18n.t('content.filterUnknown') }}
+          @if (unknownCount() > 0) {
+            <b>{{ unknownCount() }}</b>
+          }
+        </mat-button-toggle>
+      </mat-button-toggle-group>
     </div>
 
-    <div class="items">
-      @for (item of visible(); track item.id) {
-        @let st = statusOf(item.id);
-        <article class="item" [class.has-update]="st?.status === 'UPDATE_AVAILABLE'">
-          <div class="icon">
-            @if (iconSrc(item); as src) {
-              <img class="pixel" [src]="src" alt="" loading="lazy" (error)="iconFailed(item)" />
-            } @else {
-              <span class="ph">{{ initial(item) }}</span>
-            }
-          </div>
-
-          <div class="body">
-            <div class="title-line">
-              <h3>
-                @if (item.pageUrl) {
-                  <a [href]="item.pageUrl" target="_blank" rel="noopener">{{ item.name }}</a>
-                } @else {
-                  {{ item.name }}
-                }
-              </h3>
-              @if (item.version) {
-                <span class="version">{{ item.version }}</span>
-              }
-              @if (item.location) {
-                <span class="badge info" [title]="i18n.t('content.worldDatapackTitle')">🌍 {{ item.location }}</span>
+    @if (visible().length > 0) {
+      <mat-card class="items" appearance="outlined">
+        <!-- Stays in the layout while idle, so the list doesn't jump when a check starts. -->
+        <mat-progress-bar class="progress" [class.active]="checking()" [mode]="checking() ? 'indeterminate' : 'determinate'" [value]="0" />
+        @for (item of visible(); track item.id) {
+          @let st = statusOf(item.id);
+          <article class="item" [class.has-update]="st?.status === 'UPDATE_AVAILABLE'">
+            <div class="icon">
+              @if (iconSrc(item); as src) {
+                <img class="pixel" [src]="src" alt="" loading="lazy" (error)="iconFailed(item)" />
+              } @else {
+                <span class="ph" aria-hidden="true">{{ initial(item) }}</span>
               }
             </div>
-            @if (item.description) {
-              <p class="desc">{{ item.description }}</p>
-            }
-            <p class="meta">
-              <code>{{ item.fileName }}</code>
-              @if (item.directory) {
-                · {{ i18n.t('content.folderUnit') }}
-              } @else {
-                · {{ item.size | fileSize }}
-              }
-              · {{ item.modified | dateTime }}
-              @if (item.authors) {
-                · {{ item.authors }}
-              }
-            </p>
-          </div>
 
-          <div class="side">
-            <span class="badge" [class.modrinth]="item.source === 'MODRINTH'" [class.curseforge]="item.source === 'CURSEFORGE'">
-              {{ sourceLabel(item) }}
-            </span>
-
-            @if (busy().has(item.id)) {
-              <span class="badge info"><span class="spin"></span> {{ i18n.t('content.updating') }}</span>
-            } @else if (st) {
-              @switch (st.status) {
-                @case ('UPDATE_AVAILABLE') {
-                  <span class="badge warn" [title]="st.changelog ?? ''">
-                    {{ i18n.t('content.updateAvailableArrow', { version: st.latestVersion }) }}
-                  </span>
-                  <button class="btn primary small" (click)="install(item)" [disabled]="busy().size > 0 || installingAll()">
-                    ⬆ {{ i18n.t('content.updateBtn') }}
-                  </button>
+            <div class="body">
+              <div class="title-line">
+                <h3>
+                  @if (item.pageUrl) {
+                    <a [href]="item.pageUrl" target="_blank" rel="noopener">{{ item.name }}</a>
+                  } @else {
+                    {{ item.name }}
+                  }
+                </h3>
+                @if (item.version) {
+                  <span class="version">{{ item.version }}</span>
                 }
-                @case ('UP_TO_DATE') {
-                  <span class="badge ok">{{ i18n.t('content.upToDate') }}</span>
-                }
-                @case ('NO_COMPATIBLE') {
-                  <span class="badge muted" [title]="i18n.t('content.noCompatibleTitle')">
-                    {{ i18n.t('content.noCompatible', { version: settings()?.gameVersion }) }}
+                @if (item.location) {
+                  <span class="badge info" [matTooltip]="i18n.t('content.worldDatapackTitle')">
+                    <mat-icon svgIcon="public" aria-hidden="true" />
+                    {{ item.location }}
                   </span>
                 }
-                @default {
-                  @if (item.directory) {
-                    <span class="badge muted" [title]="i18n.t('content.directoryHashTitle')">{{ i18n.t('content.directoryBadge') }}</span>
-                  } @else if (!item.identified) {
-                    <span class="badge muted" [title]="i18n.t('content.unrecognizedTitle')">{{ i18n.t('content.unrecognizedBadge') }}</span>
+              </div>
+              @if (item.description) {
+                <p class="desc">{{ item.description }}</p>
+              }
+              <p class="meta">
+                <code>{{ item.fileName }}</code>
+                @if (item.directory) {
+                  · {{ i18n.t('content.folderUnit') }}
+                } @else {
+                  · {{ item.size | fileSize }}
+                }
+                · {{ item.modified | dateTime }}
+                @if (item.authors) {
+                  · {{ item.authors }}
+                }
+              </p>
+            </div>
+
+            <div class="side">
+              <span class="badge" [class.modrinth]="item.source === 'MODRINTH'" [class.curseforge]="item.source === 'CURSEFORGE'">
+                {{ sourceLabel(item) }}
+              </span>
+
+              @if (busy().has(item.id)) {
+                <span class="badge info"><mat-spinner class="spin" diameter="14" /> {{ i18n.t('content.updating') }}</span>
+              } @else if (st) {
+                @switch (st.status) {
+                  @case ('UPDATE_AVAILABLE') {
+                    <span class="badge warn" [matTooltip]="st.changelog ?? '' | slice: 0 : 500">
+                      {{ i18n.t('content.updateAvailableArrow', { version: st.latestVersion }) }}
+                    </span>
+                    <button matButton="tonal" type="button" class="update" (click)="install(item)" [disabled]="busy().size > 0 || installingAll()">
+                      <mat-icon svgIcon="upgrade" aria-hidden="true" />
+                      {{ i18n.t('content.updateBtn') }}
+                    </button>
+                  }
+                  @case ('UP_TO_DATE') {
+                    <span class="badge ok"><mat-icon svgIcon="check" aria-hidden="true" />{{ i18n.t('content.upToDate') }}</span>
+                  }
+                  @case ('NO_COMPATIBLE') {
+                    <span class="badge muted" [matTooltip]="i18n.t('content.noCompatibleTitle')">
+                      {{ i18n.t('content.noCompatible', { version: settings()?.gameVersion ?? '' }) }}
+                    </span>
+                  }
+                  @default {
+                    @if (item.directory) {
+                      <span class="badge muted" [matTooltip]="i18n.t('content.directoryHashTitle')">{{ i18n.t('content.directoryBadge') }}</span>
+                    } @else if (!item.identified) {
+                      <span class="badge muted" [matTooltip]="i18n.t('content.unrecognizedTitle')">{{ i18n.t('content.unrecognizedBadge') }}</span>
+                    }
                   }
                 }
+              } @else if (item.identified && checking()) {
+                <span class="badge muted"><mat-spinner class="spin" diameter="14" /> {{ i18n.t('content.checkingBadge') }}</span>
+              } @else if (!item.identified) {
+                <span class="badge muted">{{ item.directory ? i18n.t('content.directoryBadge') : i18n.t('content.unrecognizedBadge') }}</span>
               }
-            } @else if (item.identified && checking()) {
-              <span class="badge muted"><span class="spin"></span> {{ i18n.t('content.checkingBadge') }}</span>
-            } @else if (!item.identified) {
-              <span class="badge muted">{{ item.directory ? i18n.t('content.directoryBadge') : i18n.t('content.unrecognizedBadge') }}</span>
-            }
-          </div>
-        </article>
-      } @empty {
-        <div class="empty">{{ i18n.t('content.nothingFound') }}</div>
-      }
-    </div>
+            </div>
+          </article>
+        }
+      </mat-card>
+    } @else {
+      <div class="empty">
+        <mat-icon svgIcon="search" aria-hidden="true" />
+        {{ i18n.t('content.nothingFound') }}
+      </div>
+    }
   }
 }

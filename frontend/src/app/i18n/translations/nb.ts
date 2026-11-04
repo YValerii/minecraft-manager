@@ -1,9 +1,15 @@
 export const nb = {
+  common: {
+    confirm: 'Bekreft',
+    cancel: 'Avbryt',
+    clear: 'Tøm',
+  },
   langSwitcher: {
     ariaLabel: 'Språk',
   },
   app: {
     sectionsAriaLabel: 'Seksjoner',
+    openNav: 'Åpne navigasjon',
     settingsLink: 'Innstillinger',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const nb = {
     folderUnit: 'mappe',
     updateBtn: 'Oppdater',
     updateAvailableArrow: 'Oppdatering tilgjengelig → {version}',
-    upToDate: '✓ Nyeste versjon',
+    upToDate: 'Nyeste versjon',
     noCompatibleTitle: 'Nettstedet har ingen versjon som passer til innstillingene dine',
     noCompatible: 'Ingen versjon for {version}',
     directoryHashTitle: 'Mapper kan ikke kontrolleres med hash',
@@ -91,6 +97,8 @@ export const nb = {
     curseforgeKeyHint:
       'Gratis nøkkel: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Uten API-nøkkel lastes ikke data fra CurseForge inn.',
+    showKey: 'Vis nøkkel',
+    hideKey: 'Skjul nøkkel',
     foldersSection: 'Mapper',
     foldersHint: 'Relative baner regnes fra Minecraft-mappen, absolutte baner brukes uendret.',
     modsLabel: 'Modder',
@@ -120,6 +128,11 @@ export const nb = {
     loadingLevelDat: 'Leser level.dat…',
     gameRulesHeading: 'Spilleregler ({count})',
     allDataSummary: 'Alle level.dat-data (NBT)',
+    filterRules: 'Filtrer regler…',
+    tabs: {
+      overview: 'Oversikt',
+      raw: 'NBT-data',
+    },
     loadingRaw: 'Laster inn…',
     rawError: 'Feil: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const nb = {
     blocksFormat: '{size} blokker',
     edit: {
       enable: 'Slå på redigering',
-      disable: 'Slå av redigering',
       warning: 'Lukk denne verdenen i Minecraft før du lagrer. Den forrige versjonen av hver endrede fil beholdes med endelsen _old.',
       resetIcon: 'Tilbakestill ikon',
       resetIconHint: 'Minecraft lager et nytt ikon neste gang verdenen spilles.',

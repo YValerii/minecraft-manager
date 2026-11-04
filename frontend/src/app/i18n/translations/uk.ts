@@ -1,9 +1,15 @@
 export const uk = {
+  common: {
+    confirm: 'Підтвердити',
+    cancel: 'Скасувати',
+    clear: 'Очистити',
+  },
   langSwitcher: {
     ariaLabel: 'Мова',
   },
   app: {
     sectionsAriaLabel: 'Розділи',
+    openNav: 'Відкрити навігацію',
     settingsLink: 'Налаштування',
     launcher: {
       label: 'Лаунчер',
@@ -54,7 +60,7 @@ export const uk = {
     folderUnit: 'папка',
     updateBtn: 'Оновити',
     updateAvailableArrow: 'Є оновлення → {version}',
-    upToDate: '✓ Остання версія',
+    upToDate: 'Остання версія',
     noCompatibleTitle: 'На сайті немає версії під ваші налаштування',
     noCompatible: 'Немає версії для {version}',
     directoryHashTitle: 'Папки не можна перевірити за хешем',
@@ -91,6 +97,8 @@ export const uk = {
     curseforgeKeyHint:
       'Безкоштовний ключ: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Для CurseForge без API-ключа дані не завантажаться.',
+    showKey: 'Показати ключ',
+    hideKey: 'Приховати ключ',
     foldersSection: 'Папки',
     foldersHint: 'Відносні шляхи рахуються від папки Minecraft, абсолютні використовуються як є.',
     modsLabel: 'Моди',
@@ -120,6 +128,11 @@ export const uk = {
     loadingLevelDat: 'Читаю level.dat…',
     gameRulesHeading: 'Ігрові правила ({count})',
     allDataSummary: 'Усі дані level.dat (NBT)',
+    filterRules: 'Фільтрувати правила…',
+    tabs: {
+      overview: 'Огляд',
+      raw: 'Дані NBT',
+    },
     loadingRaw: 'Завантаження…',
     rawError: 'Помилка: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const uk = {
     blocksFormat: '{size} блоків',
     edit: {
       enable: 'Увімкнути редагування',
-      disable: 'Вимкнути редагування',
       warning: 'Перед збереженням закрийте цей світ у Minecraft. Попередня версія кожного зміненого файлу зберігається із суфіксом _old.',
       resetIcon: 'Скинути значок',
       resetIconHint: 'Minecraft створить новий значок, коли ви наступного разу гратимете в цьому світі.',

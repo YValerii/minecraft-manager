@@ -1,54 +1,133 @@
-<header class="topbar">
-  <div class="inner">
-    <a class="brand" routerLink="/">
-      <span class="logo" aria-hidden="true"></span>
+<mat-sidenav-container class="shell">
+  <mat-sidenav
+    class="nav"
+    [mode]="compact() ? 'over' : 'side'"
+    [opened]="!compact() || navOpen()"
+    [disableClose]="!compact()"
+    (openedChange)="onNavChange($event)"
+  >
+    <a class="brand" routerLink="/" (click)="closeNav()">
+      <img src="logo.svg" alt="" width="40" height="40" />
       <span>Minecraft Manager</span>
     </a>
-    <nav class="tabs" [attr.aria-label]="i18n.t('app.sectionsAriaLabel')">
-      @for (tab of tabs; track tab.link) {
-        <a class="tab" [routerLink]="tab.link" routerLinkActive="active">
-          <span class="emoji" aria-hidden="true">{{ tab.emoji }}</span>{{ i18n.t(tab.labelKey) }}
-        </a>
-      }
+
+    <nav class="sections" [attr.aria-label]="i18n.t('app.sectionsAriaLabel')">
+      <mat-nav-list>
+        @for (tab of tabs; track tab.link) {
+          <a
+            mat-list-item
+            class="tab"
+            [routerLink]="tab.link"
+            routerLinkActive="active"
+            ariaCurrentWhenActive="page"
+            #active="routerLinkActive"
+            [activated]="active.isActive"
+            (click)="closeNav()"
+          >
+            <mat-icon matListItemIcon [svgIcon]="tab.icon" aria-hidden="true" />
+            <span matListItemTitle>{{ i18n.t(tab.labelKey) }}</span>
+          </a>
+        }
+      </mat-nav-list>
     </nav>
-    <button
-      type="button"
-      class="btn primary small launch"
-      [disabled]="!launcherAvailable() || launching()"
-      [title]="i18n.t(launcherAvailable() ? 'app.launcher.title' : 'app.launcher.notFound')"
-      (click)="launchMinecraft()"
-    >
-      @if (launching()) {
-        <span class="spin" aria-hidden="true"></span>
-      } @else {
-        <span aria-hidden="true">▶</span>
-      }
-      {{ i18n.t('app.launcher.label') }}
-    </button>
-    <a class="tab settings" routerLink="/settings" routerLinkActive="active">
-      <span class="emoji" aria-hidden="true">⚙️</span>{{ i18n.t('app.settingsLink') }}
-    </a>
-    <select #langSelect class="lang-switch" [attr.aria-label]="i18n.t('langSwitcher.ariaLabel')" (change)="setLang($any(langSelect.value))">
-      @for (l of i18n.languages; track l.code) {
-        <option [value]="l.code" [selected]="l.code === i18n.lang()">{{ l.name }}</option>
-      }
-    </select>
-    <button
-      type="button"
-      class="btn small theme-toggle"
-      [title]="i18n.t(theme.theme() === 'dark' ? 'app.theme.toLight' : 'app.theme.toDark')"
-      [attr.aria-label]="i18n.t(theme.theme() === 'dark' ? 'app.theme.toLight' : 'app.theme.toDark')"
-      (click)="theme.toggle()"
-    >
-      <span aria-hidden="true">{{ theme.theme() === 'dark' ? '☀️' : '🌙' }}</span>
-    </button>
-  </div>
-</header>
 
-<main class="content">
-  <router-outlet />
-</main>
+    <mat-nav-list class="bottom">
+      <a
+        mat-list-item
+        class="settings"
+        routerLink="/settings"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        #settingsActive="routerLinkActive"
+        [activated]="settingsActive.isActive"
+        (click)="closeNav()"
+      >
+        <mat-icon matListItemIcon svgIcon="settings" aria-hidden="true" />
+        <span matListItemTitle>{{ i18n.t('app.settingsLink') }}</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
 
-@if (toast(); as t) {
-  <p class="banner toast" [class.ok]="t.kind === 'ok'" [class.error]="t.kind === 'error'" role="status">{{ t.text }}</p>
-}
+  <mat-sidenav-content class="main">
+    <mat-toolbar class="topbar">
+      @if (compact()) {
+        <button
+          matIconButton
+          type="button"
+          class="menu-toggle"
+          [attr.aria-label]="i18n.t('app.openNav')"
+          [matTooltip]="i18n.t('app.openNav')"
+          (click)="navOpen.set(true)"
+        >
+          <mat-icon svgIcon="menu" />
+        </button>
+        <img class="compact-logo" src="logo.svg" alt="Minecraft Manager" width="32" height="32" />
+      }
+      <span class="spacer"></span>
+
+      <!-- The tooltip sits on a wrapper because a disabled button doesn't receive hover. -->
+      <span [matTooltip]="i18n.t(launcherAvailable() ? 'app.launcher.title' : 'app.launcher.notFound')">
+        <button
+          matButton="filled"
+          type="button"
+          class="launch"
+          [disabled]="!launcherAvailable() || launching()"
+          (click)="launchMinecraft()"
+        >
+          @if (launching()) {
+            <mat-spinner matButtonIcon class="spin" diameter="18" />
+          } @else {
+            <mat-icon svgIcon="play_arrow" aria-hidden="true" />
+          }
+          {{ i18n.t('app.launcher.label') }}
+        </button>
+      </span>
+
+      <button
+        matIconButton
+        type="button"
+        class="lang-switch"
+        [matMenuTriggerFor]="languages"
+        [attr.aria-label]="i18n.t('langSwitcher.ariaLabel')"
+        [matTooltip]="i18n.t('langSwitcher.ariaLabel')"
+      >
+        <mat-icon svgIcon="language" />
+      </button>
+      <mat-menu #languages="matMenu" class="lang-menu">
+        @for (l of i18n.languages; track l.code) {
+          <button
+            mat-menu-item
+            type="button"
+            role="menuitemradio"
+            class="lang-option"
+            [attr.lang]="l.code"
+            [attr.aria-checked]="l.code === i18n.lang()"
+            (click)="setLang(l.code)"
+          >
+            @if (l.code === i18n.lang()) {
+              <mat-icon svgIcon="check" aria-hidden="true" />
+            } @else {
+              <mat-icon aria-hidden="true" />
+            }
+            <span>{{ l.name }}</span>
+          </button>
+        }
+      </mat-menu>
+
+      <button
+        matIconButton
+        type="button"
+        class="theme-toggle"
+        [matTooltip]="i18n.t(theme.theme() === 'dark' ? 'app.theme.toLight' : 'app.theme.toDark')"
+        [attr.aria-label]="i18n.t(theme.theme() === 'dark' ? 'app.theme.toLight' : 'app.theme.toDark')"
+        (click)="theme.toggle()"
+      >
+        <mat-icon [svgIcon]="theme.theme() === 'dark' ? 'light_mode' : 'dark_mode'" />
+      </button>
+    </mat-toolbar>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

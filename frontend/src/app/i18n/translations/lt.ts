@@ -1,9 +1,15 @@
 export const lt = {
+  common: {
+    confirm: 'Patvirtinti',
+    cancel: 'Atšaukti',
+    clear: 'Išvalyti',
+  },
   langSwitcher: {
     ariaLabel: 'Kalba',
   },
   app: {
     sectionsAriaLabel: 'Skyriai',
+    openNav: 'Atidaryti naršymą',
     settingsLink: 'Nustatymai',
     launcher: {
       label: 'Paleidyklė',
@@ -54,7 +60,7 @@ export const lt = {
     folderUnit: 'aplankas',
     updateBtn: 'Atnaujinti',
     updateAvailableArrow: 'Yra atnaujinimas → {version}',
-    upToDate: '✓ Naujausia versija',
+    upToDate: 'Naujausia versija',
     noCompatibleTitle: 'Svetainėje nėra versijos, atitinkančios jūsų nustatymus',
     noCompatible: 'Nėra versijos, skirtos {version}',
     directoryHashTitle: 'Aplankų negalima patikrinti pagal maišos reikšmę',
@@ -91,6 +97,8 @@ export const lt = {
     curseforgeKeyHint:
       'Nemokamas raktas: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Be API rakto CurseForge duomenys nebus įkelti.',
+    showKey: 'Rodyti raktą',
+    hideKey: 'Slėpti raktą',
     foldersSection: 'Aplankai',
     foldersHint: 'Santykiniai keliai skaičiuojami nuo Minecraft aplanko, absoliutūs naudojami nepakeisti.',
     modsLabel: 'Modai',
@@ -120,6 +128,11 @@ export const lt = {
     loadingLevelDat: 'Skaitomas level.dat…',
     gameRulesHeading: 'Žaidimo taisyklės ({count})',
     allDataSummary: 'Visi level.dat duomenys (NBT)',
+    filterRules: 'Filtruoti taisykles…',
+    tabs: {
+      overview: 'Apžvalga',
+      raw: 'NBT duomenys',
+    },
     loadingRaw: 'Įkeliama…',
     rawError: 'Klaida: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const lt = {
     blocksFormat: 'Blokų: {size}',
     edit: {
       enable: 'Įjungti redagavimą',
-      disable: 'Išjungti redagavimą',
       warning: 'Prieš įrašydami uždarykite šį pasaulį „Minecraft“. Ankstesnė kiekvieno pakeisto failo versija išsaugoma su priesaga _old.',
       resetIcon: 'Atkurti piktogramą',
       resetIconHint: '„Minecraft“ sukurs naują piktogramą, kai šiame pasaulyje bus žaidžiama kitą kartą.',

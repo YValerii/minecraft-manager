@@ -1,62 +1,79 @@
-:root {
+@use '@angular/material' as mat;
+
+// ---------- theme
+// Colours, type and shape come from Material's system tokens (--mat-sys-*), so light and dark both follow from
+// color-scheme, which is set from <html data-theme> by the script in index.html and by ThemeService.
+html {
   color-scheme: dark;
-  --bg: #12151a;
-  --panel: #1a1f26;
-  --panel-2: #222933;
-  --border: #2d3641;
-  --text: #e6edf3;
-  --muted: #8b98a6;
-  --accent: #5cbb4a;
-  --accent-strong: #479a38;
-  --accent-ink: #0c1a08;
-  --warn: #e3b341;
-  --danger: #f0605d;
-  --info: #58a6ff;
-  --text-2: #b6c2cf;
-  --hover-bg: #2a323d;
-  --hover-border: #44505e;
-  --accent-hover: #6fcf5c;
-  --topbar-bg: rgba(18, 21, 26, 0.92);
-  --chip-bg: rgba(18, 21, 26, 0.85);
-  --line-subtle: rgba(255, 255, 255, 0.05);
-  --fill-subtle: rgba(255, 255, 255, 0.06);
-  --backdrop: rgba(5, 8, 12, 0.72);
-  --shadow: rgba(0, 0, 0, 0.55);
-  --thumb: linear-gradient(160deg, #1f3a2a, #14202b);
-  --modrinth: #1bd96a;
-  --curseforge: #f16436;
-  --radius: 10px;
-  --mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$green-palette,
+        tertiary: mat.$chartreuse-palette,
+      ),
+      typography: 'Roboto Variable',
+      density: -1,
+    )
+  );
+
+  // Material's green palette is close to neon in the dark theme, so the primary colours are set to a softer green.
+  @include mat.theme-overrides(
+    (
+      primary: light-dark(#2f6b27, #96d886),
+      on-primary: light-dark(#ffffff, #0a3902),
+      primary-container: light-dark(#b1f29e, #16520f),
+      on-primary-container: light-dark(#0a2204, #b1f29e),
+    )
+  );
+
+  // Status colours Material has no token for, chosen to keep 4.5:1 contrast on the surfaces in both themes.
+  --app-success: light-dark(#1b6e24, #86d97f);
+  --app-warning: light-dark(#7a5600, #eec14d);
+  --app-info: light-dark(#0b5cad, #94c5ff);
+  --app-modrinth: light-dark(#0a7d3c, #4fe08c);
+  --app-curseforge: light-dark(#b8431a, #ff9a73);
+  --app-mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+
+  @include mat.card-overrides(
+    (
+      outlined-container-shape: var(--mat-sys-corner-large),
+      outlined-container-color: var(--mat-sys-surface-container-low),
+      outlined-outline-color: var(--mat-sys-outline-variant),
+    )
+  );
+  @include mat.sidenav-overrides(
+    (
+      container-shape: 0,
+      container-width: 256px,
+      container-background-color: var(--mat-sys-surface-container-low),
+      container-divider-color: var(--mat-sys-outline-variant),
+      content-background-color: var(--mat-sys-surface),
+    )
+  );
+  @include mat.toolbar-overrides(
+    (
+      container-background-color: var(--mat-sys-surface),
+      standard-height: 64px,
+    )
+  );
+  @include mat.dialog-overrides(
+    (
+      // A step above the page, so the dialog keeps a visible edge in the dark theme.
+      container-color: var(--mat-sys-surface-container),
+      container-shape: var(--mat-sys-corner-extra-large),
+      container-max-width: 100vw,
+    )
+  );
+  @include mat.tooltip-overrides(
+    (
+      supporting-text-size: 13px,
+    )
+  );
 }
 
-// Set on <html> by the script in index.html and by ThemeService.
-:root[data-theme='light'] {
+html[data-theme='light'] {
   color-scheme: light;
-  --bg: #f4f6f8;
-  --panel: #ffffff;
-  --panel-2: #eaeef2;
-  --border: #d0d7de;
-  --text: #1f2328;
-  --muted: #59636e;
-  --accent: #2f7d22;
-  --accent-strong: #276b1c;
-  --accent-ink: #ffffff;
-  --warn: #8a6100;
-  --danger: #c62828;
-  --info: #0b63c5;
-  --text-2: #424a53;
-  --hover-bg: #dde3e9;
-  --hover-border: #afb8c1;
-  --accent-hover: #276b1c;
-  --topbar-bg: rgba(255, 255, 255, 0.92);
-  --chip-bg: rgba(255, 255, 255, 0.9);
-  --line-subtle: rgba(0, 0, 0, 0.07);
-  --fill-subtle: rgba(0, 0, 0, 0.04);
-  --backdrop: rgba(31, 35, 40, 0.45);
-  --shadow: rgba(31, 35, 40, 0.2);
-  --thumb: linear-gradient(160deg, #d6ecd0, #d5e3ee);
-  --modrinth: #0a7d3c;
-  --curseforge: #c5481c;
 }
 
 *,
@@ -68,12 +85,10 @@
 html,
 body {
   margin: 0;
-  min-height: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-size: 15px;
-  line-height: 1.45;
+  height: 100%;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
 }
 
 h1,
@@ -84,163 +99,79 @@ p {
 }
 
 a {
-  color: var(--info);
+  color: var(--mat-sys-primary);
   text-decoration: none;
+
   &:hover {
     text-decoration: underline;
   }
 }
 
 code {
-  font-family: var(--mono);
-  font-size: 0.85em;
+  font-family: var(--app-mono);
+  font-size: 0.9em;
 }
 
 .pixel {
   image-rendering: pixelated;
 }
 
-// ---------- buttons
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--panel-2);
-  color: var(--text);
-  font: inherit;
-  cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
-
-  &:hover:not(:disabled) {
-    border-color: var(--hover-border);
-    background: var(--hover-bg);
-  }
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  &.primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-ink);
-    font-weight: 600;
-    &:hover:not(:disabled) {
-      background: var(--accent-hover);
-      border-color: var(--accent-hover);
-    }
-  }
-  &.small {
-    padding: 5px 10px;
-    font-size: 13px;
-  }
+// A focused control must always be visible, including links and the custom tiles.
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
 }
 
-// ---------- badges
+// ---------- status labels
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 9px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--panel-2);
-  color: var(--muted);
-  font-size: 12px;
+  gap: 4px;
+  min-height: 24px;
+  padding: 2px 10px;
+  border-radius: var(--mat-sys-corner-full);
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-medium);
   white-space: nowrap;
 
+  mat-icon {
+    width: 16px;
+    height: 16px;
+    margin-inline-start: -4px;
+  }
+  mat-spinner {
+    margin-inline-start: -2px;
+  }
+
   &.ok {
-    color: var(--accent);
-    border-color: rgba(92, 187, 74, 0.4);
-    background: rgba(92, 187, 74, 0.1);
+    color: var(--app-success);
+    background: color-mix(in srgb, var(--app-success) 12%, transparent);
   }
   &.warn {
-    color: var(--warn);
-    border-color: rgba(227, 179, 65, 0.45);
-    background: rgba(227, 179, 65, 0.1);
+    color: var(--app-warning);
+    background: color-mix(in srgb, var(--app-warning) 14%, transparent);
   }
   &.info {
-    color: var(--info);
-    border-color: rgba(88, 166, 255, 0.4);
-    background: rgba(88, 166, 255, 0.1);
+    color: var(--app-info);
+    background: color-mix(in srgb, var(--app-info) 12%, transparent);
   }
   &.danger {
-    color: var(--danger);
-    border-color: rgba(240, 96, 93, 0.45);
-    background: rgba(240, 96, 93, 0.1);
+    color: var(--mat-sys-error);
+    background: color-mix(in srgb, var(--mat-sys-error) 12%, transparent);
   }
   &.modrinth {
-    color: var(--modrinth);
-    border-color: rgba(27, 217, 106, 0.4);
+    color: var(--app-modrinth);
+    background: color-mix(in srgb, var(--app-modrinth) 12%, transparent);
   }
   &.curseforge {
-    color: var(--curseforge);
-    border-color: rgba(241, 100, 54, 0.45);
+    color: var(--app-curseforge);
+    background: color-mix(in srgb, var(--app-curseforge) 12%, transparent);
   }
 }
 
-// ---------- banners
-.banner {
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  margin-bottom: 14px;
-
-  &.warn {
-    border-color: rgba(227, 179, 65, 0.5);
-    background: rgba(227, 179, 65, 0.08);
-  }
-  &.error {
-    border-color: rgba(240, 96, 93, 0.5);
-    background: rgba(240, 96, 93, 0.08);
-  }
-  &.ok {
-    border-color: rgba(92, 187, 74, 0.5);
-    background: rgba(92, 187, 74, 0.08);
-  }
-}
-
-// ---------- forms
-input[type='text'],
-input[type='search'],
-input[type='password'],
-input[type='number'],
-select {
-  width: 100%;
-  padding: 8px 11px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
-  font: inherit;
-
-  &:focus {
-    outline: 2px solid rgba(92, 187, 74, 0.45);
-    outline-offset: 0;
-    border-color: var(--accent);
-  }
-}
-
-// ---------- spinner
-.spin {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
+// ---------- page structure
 .page-head {
   display: flex;
   align-items: flex-start;
@@ -249,28 +180,31 @@ select {
   margin-bottom: 16px;
   flex-wrap: wrap;
 
+  .titles {
+    min-width: 0;
+  }
   h1 {
-    font-size: 24px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    font: var(--mat-sys-headline-small);
   }
   .count {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--muted);
-    background: var(--panel-2);
-    border-radius: 999px;
-    padding: 1px 10px;
+    padding: 2px 10px;
+    border-radius: var(--mat-sys-corner-full);
+    background: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+    font: var(--mat-sys-label-large);
   }
   .path {
     margin-top: 4px;
-    color: var(--muted);
-    font-family: var(--mono);
+    color: var(--mat-sys-on-surface-variant);
+    font-family: var(--app-mono);
     font-size: 12.5px;
-    word-break: break-all;
+    overflow-wrap: anywhere;
+
     &.missing {
-      color: var(--warn);
+      color: var(--app-warning);
     }
   }
   .actions {
@@ -281,9 +215,44 @@ select {
 }
 
 .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 56px 16px;
+  border: 1px dashed var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-large);
+  color: var(--mat-sys-on-surface-variant);
   text-align: center;
-  color: var(--muted);
-  padding: 48px 16px;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius);
+}
+
+// ---------- overlays
+.snack-error {
+  @include mat.snack-bar-overrides(
+    (
+      container-color: var(--mat-sys-error-container),
+      supporting-text-color: var(--mat-sys-on-error-container),
+    )
+  );
+}
+
+// The default scrim barely shows on a dark page.
+.cdk-overlay-dark-backdrop {
+  background: rgb(0 0 0 / 60%);
+}
+
+.world-dialog {
+  // The tabs scroll inside the dialog, so its header and save bar stay in view.
+  .mat-mdc-dialog-surface {
+    overflow: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

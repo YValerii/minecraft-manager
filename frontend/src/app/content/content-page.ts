@@ -1,37 +1,50 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { SlicePipe } from '@angular/common';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
+import { MatCard } from '@angular/material/card';
+import { MatFormField, MatPrefix, MatSuffix } from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
+import { MatInput } from '@angular/material/input';
+import { MatProgressBar } from '@angular/material/progress-bar';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatTooltip } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { ApiService, errorMessage } from '../api.service';
 import { DateTimePipe, FileSizePipe } from '../format';
 import { I18nService } from '../i18n/i18n.service';
+import { AppIcon } from '../icons';
 import { ContentItem, ContentList, ContentType, Settings, UpdateItem } from '../models';
+import { Banner } from '../shared/banner';
+import { ConfirmService } from '../shared/confirm.service';
 
 interface CategoryMeta {
   titleKey: string;
-  emoji: string;
+  icon: AppIcon;
   /** Whether compatibility depends on the mod loader (mods only). */
   usesLoader: boolean;
   emptyKey: string;
 }
 
 const CATEGORIES: Record<ContentType, CategoryMeta> = {
-  mods: { titleKey: 'content.titles.mods', emoji: '🧩', usesLoader: true, emptyKey: 'content.empty.mods' },
+  mods: { titleKey: 'content.titles.mods', icon: 'extension', usesLoader: true, emptyKey: 'content.empty.mods' },
   resourcepacks: {
     titleKey: 'content.titles.resourcepacks',
-    emoji: '🎨',
+    icon: 'palette',
     usesLoader: false,
     emptyKey: 'content.empty.resourcepacks',
   },
   datapacks: {
     titleKey: 'content.titles.datapacks',
-    emoji: '📦',
+    icon: 'inventory_2',
     usesLoader: false,
     emptyKey: 'content.empty.datapacks',
   },
   shaderpacks: {
     titleKey: 'content.titles.shaderpacks',
-    emoji: '✨',
+    icon: 'flare',
     usesLoader: false,
     emptyKey: 'content.empty.shaderpacks',
   },
@@ -41,12 +54,32 @@ type Filter = 'all' | 'updates' | 'unknown';
 
 @Component({
   selector: 'app-content-page',
-  imports: [RouterLink, FileSizePipe, DateTimePipe],
+  imports: [
+    RouterLink,
+    FileSizePipe,
+    DateTimePipe,
+    SlicePipe,
+    Banner,
+    MatButton,
+    MatButtonToggle,
+    MatButtonToggleGroup,
+    MatCard,
+    MatFormField,
+    MatIcon,
+    MatIconButton,
+    MatInput,
+    MatPrefix,
+    MatProgressBar,
+    MatProgressSpinner,
+    MatSuffix,
+    MatTooltip,
+  ],
   templateUrl: './content-page.html',
   styleUrl: './content-page.scss',
 })
 export class ContentPage {
   private readonly api = inject(ApiService);
+  private readonly confirm = inject(ConfirmService);
   readonly i18n = inject(I18nService);
 
   /** Taken from the /c/:type route (withComponentInputBinding). */
@@ -170,7 +203,7 @@ export class ContentPage {
 
   async installAll(): Promise<void> {
     const count = this.updateCount();
-    if (count === 0 || !confirm(this.i18n.t('content.confirmUpdateAll', { count }))) {
+    if (count === 0 || !(await this.confirm.ask(this.i18n.t('content.confirmUpdateAll', { count })))) {
       return;
     }
     const type = this.type();

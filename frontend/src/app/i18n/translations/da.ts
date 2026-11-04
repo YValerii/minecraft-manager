@@ -1,9 +1,15 @@
 export const da = {
+  common: {
+    confirm: 'Bekræft',
+    cancel: 'Annuller',
+    clear: 'Ryd',
+  },
   langSwitcher: {
     ariaLabel: 'Sprog',
   },
   app: {
     sectionsAriaLabel: 'Sektioner',
+    openNav: 'Åbn navigation',
     settingsLink: 'Indstillinger',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const da = {
     folderUnit: 'mappe',
     updateBtn: 'Opdater',
     updateAvailableArrow: 'Opdatering tilgængelig → {version}',
-    upToDate: '✓ Nyeste version',
+    upToDate: 'Nyeste version',
     noCompatibleTitle: 'Webstedet har ingen version, der passer til dine indstillinger',
     noCompatible: 'Ingen version til {version}',
     directoryHashTitle: 'Mapper kan ikke kontrolleres med hash',
@@ -91,6 +97,8 @@ export const da = {
     curseforgeKeyHint:
       'Gratis nøgle: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Uden en API-nøgle indlæses CurseForge-data ikke.',
+    showKey: 'Vis nøgle',
+    hideKey: 'Skjul nøgle',
     foldersSection: 'Mapper',
     foldersHint: 'Relative stier regnes fra Minecraft-mappen, absolutte stier bruges uændret.',
     modsLabel: 'Mods',
@@ -120,6 +128,11 @@ export const da = {
     loadingLevelDat: 'Læser level.dat…',
     gameRulesHeading: 'Spilleregler ({count})',
     allDataSummary: 'Alle level.dat-data (NBT)',
+    filterRules: 'Filtrer regler…',
+    tabs: {
+      overview: 'Oversigt',
+      raw: 'NBT-data',
+    },
     loadingRaw: 'Indlæser…',
     rawError: 'Fejl: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const da = {
     blocksFormat: '{size} blokke',
     edit: {
       enable: 'Aktivér redigering',
-      disable: 'Deaktiver redigering',
       warning: 'Luk denne verden i Minecraft, før du gemmer. Den forrige version af hver ændret fil bevares med endelsen _old.',
       resetIcon: 'Nulstil ikon',
       resetIconHint: 'Minecraft laver et nyt ikon, næste gang verdenen spilles.',

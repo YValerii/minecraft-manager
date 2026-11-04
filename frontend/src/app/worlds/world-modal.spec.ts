@@ -1,10 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialogRef } from '@angular/material/dialog';
+import { MatSelect } from '@angular/material/select';
+import { By } from '@angular/platform-browser';
 import { of, Subject, throwError } from 'rxjs';
 
 import { ApiService } from '../api.service';
 import { I18nService } from '../i18n/i18n.service';
 import { WorldDetails } from '../models';
+import { ConfirmService } from '../shared/confirm.service';
 import { WorldModal } from './world-modal';
 
 function details(overrides: Partial<WorldDetails> = {}): WorldDetails {
@@ -59,6 +63,10 @@ describe('WorldModal', () => {
     resetWorldIcon: ReturnType<typeof vi.fn>;
   };
   let i18n: I18nService;
+  let confirm: ReturnType<typeof vi.fn>;
+  let closeDialog: ReturnType<typeof vi.fn>;
+  let backdropClicks: Subject<MouseEvent>;
+  let keydowns: Subject<KeyboardEvent>;
 
   async function settle(fixture: ComponentFixture<WorldModal>): Promise<void> {
     for (let i = 0; i < 3; i++) {
@@ -83,12 +91,16 @@ describe('WorldModal', () => {
 
   const row = (key: string) => i18n.t(`worldModal.rows.${key}`);
 
-  async function toggleRaw(fixture: ComponentFixture<WorldModal>, open: boolean): Promise<void> {
-    const raw: HTMLDetailsElement = fixture.nativeElement.querySelector('details.raw');
-    raw.open = open;
-    raw.dispatchEvent(new Event('toggle'));
+  async function openTab(fixture: ComponentFixture<WorldModal>, index: number): Promise<void> {
+    await fixture.componentInstance.onTab(index);
     await settle(fixture);
   }
+
+  const openRaw = (fixture: ComponentFixture<WorldModal>): Promise<void> =>
+    openTab(fixture, fixture.componentInstance.rawTabIndex());
+  const openRules = (fixture: ComponentFixture<WorldModal>): Promise<void> => openTab(fixture, 1);
+
+  const pressEscape = (): void => keydowns.next(new KeyboardEvent('keydown', { key: 'Escape' }));
 
   beforeEach(() => {
     api = {
@@ -98,7 +110,20 @@ describe('WorldModal', () => {
       updateWorld: vi.fn(() => of(details())),
       resetWorldIcon: vi.fn(() => of(details())),
     };
-    TestBed.configureTestingModule({ providers: [{ provide: ApiService, useValue: api }] });
+    confirm = vi.fn(async () => true);
+    closeDialog = vi.fn();
+    backdropClicks = new Subject();
+    keydowns = new Subject();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: ApiService, useValue: api },
+        { provide: ConfirmService, useValue: { ask: confirm } },
+        {
+          provide: MatDialogRef,
+          useValue: { close: closeDialog, backdropClick: () => backdropClicks, keydownEvents: () => keydowns },
+        },
+      ],
+    });
     i18n = TestBed.inject(I18nService);
     i18n.lang.set('en');
   });
@@ -125,13 +150,13 @@ describe('WorldModal', () => {
       const fixture = await create();
 
       expect(fixture.nativeElement.querySelector('.banner.error').textContent).toBe('Could not read level.dat');
-      expect(fixture.nativeElement.querySelector('details.raw')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.raw')).toBeNull();
     });
 
     it('loads again when the folder changes, starting clean', async () => {
       const fixture = await create('a');
       fixture.nativeElement.querySelector('img').dispatchEvent(new Event('error'));
-      await toggleRaw(fixture, true);
+      await openRaw(fixture);
       expect(fixture.componentInstance.raw()).not.toBeNull();
 
       fixture.componentRef.setInput('folder', 'b');
@@ -139,6 +164,7 @@ describe('WorldModal', () => {
 
       expect(api.world).toHaveBeenLastCalledWith('b');
       expect(fixture.componentInstance.raw()).toBeNull();
+      expect(fixture.componentInstance.tabIndex()).toBe(0);
       expect(fixture.componentInstance.iconBroken()).toBe(false);
       expect(fixture.nativeElement.querySelector('img').getAttribute('src')).toBe('/icon/b');
     });
@@ -385,17 +411,33 @@ describe('WorldModal', () => {
         { name: 'mid', value: '5' },
         { name: 'zeta', value: 'false' },
       ]);
+      expect(fixture.nativeElement.textContent).toContain(i18n.t('worldModal.gameRulesHeading', { count: 3 }));
+      await openRules(fixture);
       const badges: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.rule .badge'));
       expect(badges[0].classList).toContain('ok');
       expect(badges[1].classList).not.toContain('ok');
       expect(badges[1].classList).not.toContain('danger');
       expect(badges[2].classList).toContain('danger');
-      expect(fixture.nativeElement.textContent).toContain(i18n.t('worldModal.gameRulesHeading', { count: 3 }));
+    });
+
+    it('can be filtered by name, ignoring case', async () => {
+      api.world.mockReturnValue(of(details({ gameRules: { keep_inventory: 'true', fall_damage: 'true' } })));
+      const fixture = await create();
+      await openRules(fixture);
+
+      const filter: HTMLInputElement = fixture.nativeElement.querySelector('.rule-filter input');
+      filter.value = ' KEEP ';
+      filter.dispatchEvent(new Event('input'));
+      await settle(fixture);
+
+      const rules: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.rule code'));
+      expect(rules.map((r) => r.textContent)).toEqual(['keep_inventory']);
     });
 
     it('are left out when there are none or they are unusable', async () => {
       const fixture = await create();
       expect(fixture.componentInstance.gameRules()).toEqual([]);
+      expect(fixture.componentInstance.rawTabIndex()).toBe(1);
       expect(fixture.nativeElement.querySelector('.rules')).toBeNull();
 
       api.world.mockReturnValue(of(details({ gameRules: 'text' as unknown as Record<string, unknown> })));
@@ -406,22 +448,22 @@ describe('WorldModal', () => {
   });
 
   describe('raw data', () => {
-    it('only loads once opened', async () => {
+    it('only loads once its tab is opened', async () => {
       const fixture = await create();
       expect(api.worldRaw).not.toHaveBeenCalled();
 
-      await toggleRaw(fixture, true);
+      await openRaw(fixture);
 
       expect(api.worldRaw).toHaveBeenCalledWith('w');
-      expect(fixture.nativeElement.querySelector('details.raw pre').textContent).toBe(
+      expect(fixture.nativeElement.querySelector('.raw pre').textContent).toBe(
         JSON.stringify({ Data: { a: 1 } }, null, 2),
       );
     });
 
-    it('does nothing when closing', async () => {
+    it('does nothing when another tab is opened', async () => {
       const fixture = await create();
 
-      await toggleRaw(fixture, false);
+      await openTab(fixture, 0);
 
       expect(api.worldRaw).not.toHaveBeenCalled();
     });
@@ -429,9 +471,22 @@ describe('WorldModal', () => {
     it('is only loaded once', async () => {
       const fixture = await create();
 
-      await toggleRaw(fixture, true);
-      await toggleRaw(fixture, true);
+      await openRaw(fixture);
+      await openTab(fixture, 0);
+      await openRaw(fixture);
 
+      expect(api.worldRaw).toHaveBeenCalledTimes(1);
+    });
+
+    it('is the third tab when there are game rules', async () => {
+      api.world.mockReturnValue(of(details({ gameRules: { a: 'true' } })));
+      const fixture = await create();
+
+      await openRules(fixture);
+      expect(api.worldRaw).not.toHaveBeenCalled();
+
+      await openRaw(fixture);
+      expect(fixture.componentInstance.rawTabIndex()).toBe(2);
       expect(api.worldRaw).toHaveBeenCalledTimes(1);
     });
 
@@ -440,9 +495,11 @@ describe('WorldModal', () => {
       api.worldRaw.mockReturnValue(pending);
       const fixture = await create();
 
-      await toggleRaw(fixture, true);
-      expect(fixture.nativeElement.querySelector('details.raw').textContent).toContain(i18n.t('worldModal.loadingRaw'));
-      await toggleRaw(fixture, true);
+      void fixture.componentInstance.onTab(1);
+      await settle(fixture);
+      expect(fixture.nativeElement.querySelector('.raw').textContent).toContain(i18n.t('worldModal.loadingRaw'));
+      void fixture.componentInstance.onTab(1);
+      await settle(fixture);
       expect(api.worldRaw).toHaveBeenCalledTimes(1);
 
       pending.next({});
@@ -455,7 +512,7 @@ describe('WorldModal', () => {
       api.worldRaw.mockReturnValue(failure('Broken'));
       const fixture = await create();
 
-      await toggleRaw(fixture, true);
+      await openRaw(fixture);
 
       expect(fixture.componentInstance.raw()).toBe(i18n.t('worldModal.rawError', { message: 'Broken' }));
       expect(fixture.componentInstance.rawLoading()).toBe(false);
@@ -478,7 +535,7 @@ describe('WorldModal', () => {
     async function createEditing(world = editable()): Promise<ComponentFixture<WorldModal>> {
       api.world.mockReturnValue(of(world));
       const fixture = await create();
-      q(fixture, 'button.edit-toggle').click();
+      toggle(fixture).click();
       await settle(fixture);
       return fixture;
     }
@@ -490,55 +547,62 @@ describe('WorldModal', () => {
       await settle(fixture);
     }
 
+    const select = (fixture: ComponentFixture<WorldModal>, selector: string): MatSelect =>
+      fixture.debugElement.query(By.css(selector)).componentInstance;
+
+    /** Opens the list and picks an option, as the user would. */
     async function choose(fixture: ComponentFixture<WorldModal>, selector: string, value: string): Promise<void> {
-      const select = q(fixture, selector);
-      select.value = value;
-      select.dispatchEvent(new Event('change'));
+      const list = select(fixture, selector);
+      list.open();
+      await settle(fixture);
+      list.options.find((o) => o.value === value)?._selectViaInteraction();
       await settle(fixture);
     }
+
+    const toggle = (fixture: ComponentFixture<WorldModal>) => q(fixture, '.edit-toggle button');
 
     async function tick(fixture: ComponentFixture<WorldModal>, selector: string): Promise<void> {
       q(fixture, selector).click();
       await settle(fixture);
     }
 
-    afterEach(() => vi.unstubAllGlobals());
-
     it('is off by default, showing no form', async () => {
       api.world.mockReturnValue(of(editable()));
       const fixture = await create();
 
       expect(fixture.componentInstance.draft()).toBeNull();
-      expect(q(fixture, 'button.edit-toggle').getAttribute('aria-pressed')).toBe('false');
-      expect(q(fixture, 'button.edit-toggle').textContent).toContain(i18n.t('worldModal.edit.enable'));
+      expect(toggle(fixture).getAttribute('aria-checked')).toBe('false');
+      expect(q(fixture, '.edit-toggle').textContent).toContain(i18n.t('worldModal.edit.enable'));
       expect(q(fixture, '.editor')).toBeNull();
       expect(q(fixture, '.edit-actions')).toBeNull();
-      expect(fixture.nativeElement.querySelector('.rule input')).toBeNull();
+      await openRules(fixture);
+      expect(q(fixture, '.rule')).not.toBeNull();
+      expect(q(fixture, '.rule input')).toBeNull();
     });
 
     it('offers no switch until the world is loaded', async () => {
       api.world.mockReturnValue(failure('x'));
       const fixture = await create();
 
-      expect(q(fixture, 'button.edit-toggle')).toBeNull();
+      expect(q(fixture, '.edit-toggle')).toBeNull();
     });
 
     it('shows the current values once switched on, with nothing to save yet', async () => {
       const fixture = await createEditing();
 
-      expect(q(fixture, 'button.edit-toggle').getAttribute('aria-pressed')).toBe('true');
-      expect(q(fixture, 'button.edit-toggle').textContent).toContain(i18n.t('worldModal.edit.disable'));
+      expect(toggle(fixture).getAttribute('aria-checked')).toBe('true');
       expect(q(fixture, '.edit-name').value).toBe('My World');
-      expect(q(fixture, '.edit-mode').value).toBe('survival');
-      expect(q(fixture, '.edit-difficulty').value).toBe('hard');
-      expect(q(fixture, '.edit-hardcore').checked).toBe(false);
-      expect(q(fixture, '.edit-commands').checked).toBe(false);
+      expect(select(fixture, '.edit-mode').value).toBe('survival');
+      expect(select(fixture, '.edit-difficulty').value).toBe('hard');
+      expect(q(fixture, '.edit-hardcore input').checked).toBe(false);
+      expect(q(fixture, '.edit-commands input').checked).toBe(false);
       expect(fixture.componentInstance.changes()).toEqual({});
       expect(q(fixture, 'button.save').disabled).toBe(true);
     });
 
     it('uses a control that suits each game rule', async () => {
       const fixture = await createEditing();
+      await openRules(fixture);
 
       const input = (rule: string) => q(fixture, `.rule input[aria-label="${rule}"]`);
       expect(input('minecraft:keep_inventory').type).toBe('checkbox');
@@ -559,8 +623,9 @@ describe('WorldModal', () => {
       await type(fixture, '.edit-name', '  New ');
       await choose(fixture, '.edit-mode', 'creative');
       await choose(fixture, '.edit-difficulty', 'easy');
-      await tick(fixture, '.edit-hardcore');
-      await tick(fixture, '.edit-commands');
+      await tick(fixture, '.edit-hardcore input');
+      await tick(fixture, '.edit-commands input');
+      await openRules(fixture);
       await tick(fixture, '.rule input[aria-label="minecraft:keep_inventory"]');
       await type(fixture, '.rule input[aria-label="minecraft:respawn_radius"]', '3');
       await tick(fixture, 'button.save');
@@ -576,6 +641,7 @@ describe('WorldModal', () => {
       expect(changed).toHaveBeenCalledTimes(1);
       expect(fixture.componentInstance.draft()).toBeNull();
       expect(q(fixture, 'h2').textContent).toBe('New');
+      await openTab(fixture, 0);
       expect(q(fixture, '.banner.saved').textContent).toBe(i18n.t('worldModal.edit.saved'));
     });
 
@@ -600,6 +666,7 @@ describe('WorldModal', () => {
 
       await type(fixture, '.edit-name', 'New');
       expect(q(fixture, 'button.save').disabled).toBe(false);
+      await openRules(fixture);
       await type(fixture, '.rule input[aria-label="minecraft:respawn_radius"]', '');
       expect(q(fixture, 'button.save').disabled).toBe(true);
     });
@@ -630,7 +697,7 @@ describe('WorldModal', () => {
       expect(q(fixture, 'button.save').disabled).toBe(true);
       expect(q(fixture, 'button.save').textContent).toContain(i18n.t('worldModal.edit.saving'));
       expect(q(fixture, 'button.cancel').disabled).toBe(true);
-      expect(q(fixture, 'button.edit-toggle').disabled).toBe(true);
+      expect(toggle(fixture).disabled).toBe(true);
 
       pending.next(editable());
       pending.complete();
@@ -639,67 +706,103 @@ describe('WorldModal', () => {
     });
 
     it('reloads the raw data if it is open, and otherwise forgets it', async () => {
+      api.updateWorld.mockReturnValue(of(editable()));
       const fixture = await createEditing();
-      await toggleRaw(fixture, true);
+      const modal = fixture.componentInstance;
+      await openRaw(fixture);
       expect(api.worldRaw).toHaveBeenCalledTimes(1);
 
-      await type(fixture, '.edit-name', 'New');
+      modal.patchDraft({ name: 'New' });
+      await settle(fixture);
       await tick(fixture, 'button.save');
       expect(api.worldRaw).toHaveBeenCalledTimes(2);
 
-      await toggleRaw(fixture, false);
-      q(fixture, 'button.edit-toggle').click();
+      await openTab(fixture, 0);
+      toggle(fixture).click();
       await settle(fixture);
       await type(fixture, '.edit-name', 'Newer');
       await tick(fixture, 'button.save');
       expect(api.worldRaw).toHaveBeenCalledTimes(2);
-      expect(fixture.componentInstance.raw()).toBeNull();
+      expect(modal.raw()).toBeNull();
     });
 
     it('switches off straight away when nothing changed', async () => {
-      const confirm = vi.fn(() => true);
-      vi.stubGlobal('confirm', confirm);
       const fixture = await createEditing();
 
-      await tick(fixture, 'button.edit-toggle');
+      toggle(fixture).click();
+      await settle(fixture);
 
       expect(confirm).not.toHaveBeenCalled();
       expect(fixture.componentInstance.draft()).toBeNull();
     });
 
-    for (const button of ['button.edit-toggle', 'button.cancel']) {
-      it(`asks before ${button} discards changes`, async () => {
-        const confirm = vi.fn(() => false);
-        vi.stubGlobal('confirm', confirm);
-        const fixture = await createEditing();
-        await type(fixture, '.edit-name', 'New');
-
-        await tick(fixture, button);
-        expect(confirm).toHaveBeenCalledWith(i18n.t('worldModal.edit.discardConfirm'));
-        expect(fixture.componentInstance.draft()).not.toBeNull();
-
-        confirm.mockReturnValue(true);
-        await tick(fixture, button);
-        expect(fixture.componentInstance.draft()).toBeNull();
-        expect(api.updateWorld).not.toHaveBeenCalled();
-      });
-    }
-
-    it('asks before closing discards changes', async () => {
-      const confirm = vi.fn(() => false);
-      vi.stubGlobal('confirm', confirm);
+    it('asks before the switch discards changes, and stays on when declined', async () => {
+      confirm.mockResolvedValue(false);
       const fixture = await createEditing();
-      const closed = vi.fn();
-      fixture.componentInstance.closed.subscribe(closed);
       await type(fixture, '.edit-name', 'New');
 
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-      q(fixture, '.backdrop').click();
-      expect(closed).not.toHaveBeenCalled();
+      toggle(fixture).click();
+      await settle(fixture);
+      expect(confirm).toHaveBeenCalledWith(i18n.t('worldModal.edit.discardConfirm'));
+      expect(fixture.componentInstance.draft()).not.toBeNull();
+      expect(toggle(fixture).getAttribute('aria-checked')).toBe('true');
 
-      confirm.mockReturnValue(true);
+      confirm.mockResolvedValue(true);
+      toggle(fixture).click();
+      await settle(fixture);
+      expect(fixture.componentInstance.draft()).toBeNull();
+      expect(toggle(fixture).getAttribute('aria-checked')).toBe('false');
+      expect(api.updateWorld).not.toHaveBeenCalled();
+    });
+
+    it('asks before cancel discards changes', async () => {
+      confirm.mockResolvedValue(false);
+      const fixture = await createEditing();
+      await type(fixture, '.edit-name', 'New');
+
+      await tick(fixture, 'button.cancel');
+      expect(confirm).toHaveBeenCalledWith(i18n.t('worldModal.edit.discardConfirm'));
+      expect(fixture.componentInstance.draft()).not.toBeNull();
+
+      confirm.mockResolvedValue(true);
+      await tick(fixture, 'button.cancel');
+      expect(fixture.componentInstance.draft()).toBeNull();
+      expect(toggle(fixture).getAttribute('aria-checked')).toBe('false');
+      expect(api.updateWorld).not.toHaveBeenCalled();
+    });
+
+    it('asks before closing discards changes', async () => {
+      confirm.mockResolvedValue(false);
+      const fixture = await createEditing();
+      await type(fixture, '.edit-name', 'New');
+
+      pressEscape();
+      await settle(fixture);
+      backdropClicks.next(new MouseEvent('click'));
+      await settle(fixture);
+      expect(confirm).toHaveBeenCalledTimes(2);
+      expect(closeDialog).not.toHaveBeenCalled();
+
+      confirm.mockResolvedValue(true);
       q(fixture, 'button.close').click();
-      expect(closed).toHaveBeenCalledTimes(1);
+      await settle(fixture);
+      expect(closeDialog).toHaveBeenCalledTimes(1);
+    });
+
+    it('asks only once when closing is requested twice', async () => {
+      let answer: (ok: boolean) => void = () => undefined;
+      confirm.mockReturnValue(new Promise<boolean>((resolve) => (answer = resolve)));
+      const fixture = await createEditing();
+      await type(fixture, '.edit-name', 'New');
+
+      pressEscape();
+      pressEscape();
+      await settle(fixture);
+      expect(confirm).toHaveBeenCalledTimes(1);
+
+      answer(true);
+      await settle(fixture);
+      expect(closeDialog).toHaveBeenCalledTimes(1);
     });
 
     it('starts over when the folder changes', async () => {
@@ -716,10 +819,11 @@ describe('WorldModal', () => {
       const world = editable({ summary: { ...editable().summary, gameMode: 'custom' }, difficulty: null, allowCommands: null });
       const fixture = await createEditing(world);
 
-      expect(q(fixture, '.edit-mode').value).toBe('custom');
-      expect(q(fixture, '.edit-difficulty').value).toBe('');
-      expect(q(fixture, '.edit-difficulty option').textContent).toBe('—');
-      expect(q(fixture, '.edit-commands').checked).toBe(false);
+      expect(select(fixture, '.edit-mode').value).toBe('custom');
+      expect(fixture.componentInstance.gameModeOptions()[0]).toEqual({ value: 'custom', label: 'custom' });
+      expect(select(fixture, '.edit-difficulty').value).toBe('');
+      expect(fixture.componentInstance.difficultyOptions()[0]).toEqual({ value: '', label: '—' });
+      expect(q(fixture, '.edit-commands input').checked).toBe(false);
       expect(fixture.componentInstance.changes()).toEqual({});
     });
 
@@ -727,7 +831,7 @@ describe('WorldModal', () => {
       const withoutIcon = () => editable({ summary: { ...editable().summary, hasIcon: false } });
 
       it('asks first', async () => {
-        vi.stubGlobal('confirm', vi.fn(() => false));
+        confirm.mockResolvedValue(false);
         const fixture = await createEditing();
 
         await tick(fixture, 'button.reset-icon');
@@ -736,7 +840,6 @@ describe('WorldModal', () => {
       });
 
       it('removes the icon, even one the browser still has cached, and keeps unsaved edits', async () => {
-        vi.stubGlobal('confirm', vi.fn(() => true));
         api.resetWorldIcon.mockReturnValue(of(withoutIcon()));
         const fixture = await createEditing();
         const changed = vi.fn();
@@ -753,7 +856,6 @@ describe('WorldModal', () => {
       });
 
       it('shows the error when it fails', async () => {
-        vi.stubGlobal('confirm', vi.fn(() => true));
         api.resetWorldIcon.mockReturnValue(failure('Open'));
         const fixture = await createEditing();
 
@@ -771,45 +873,35 @@ describe('WorldModal', () => {
   });
 
   describe('closing', () => {
-    let closed: ReturnType<typeof vi.fn<() => void>>;
-
-    async function createWatched(): Promise<ComponentFixture<WorldModal>> {
-      const fixture = await create();
-      closed = vi.fn<() => void>();
-      fixture.componentInstance.closed.subscribe(() => closed());
-      return fixture;
-    }
-
     it('closes with the button', async () => {
-      const fixture = await createWatched();
+      const fixture = await create();
 
       fixture.nativeElement.querySelector('button.close').click();
+      await settle(fixture);
 
-      expect(closed).toHaveBeenCalledTimes(1);
+      expect(closeDialog).toHaveBeenCalledTimes(1);
+      expect(confirm).not.toHaveBeenCalled();
     });
 
-    it('closes with Escape', async () => {
-      await createWatched();
+    it('closes with Escape, but not with other keys', async () => {
+      const fixture = await create();
 
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      keydowns.next(new KeyboardEvent('keydown', { key: 'a' }));
+      await settle(fixture);
+      expect(closeDialog).not.toHaveBeenCalled();
 
-      expect(closed).toHaveBeenCalledTimes(1);
+      pressEscape();
+      await settle(fixture);
+      expect(closeDialog).toHaveBeenCalledTimes(1);
     });
 
     it('closes when clicking outside the dialog', async () => {
-      const fixture = await createWatched();
+      const fixture = await create();
 
-      fixture.nativeElement.querySelector('.backdrop').click();
+      backdropClicks.next(new MouseEvent('click'));
+      await settle(fixture);
 
-      expect(closed).toHaveBeenCalledTimes(1);
-    });
-
-    it('stays open when clicking inside the dialog', async () => {
-      const fixture = await createWatched();
-
-      fixture.nativeElement.querySelector('.dialog').click();
-
-      expect(closed).not.toHaveBeenCalled();
+      expect(closeDialog).toHaveBeenCalledTimes(1);
     });
   });
 });

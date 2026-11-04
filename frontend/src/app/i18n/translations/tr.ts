@@ -1,9 +1,15 @@
 export const tr = {
+  common: {
+    confirm: 'Onayla',
+    cancel: 'İptal',
+    clear: 'Temizle',
+  },
   langSwitcher: {
     ariaLabel: 'Dil',
   },
   app: {
     sectionsAriaLabel: 'Bölümler',
+    openNav: 'Gezinmeyi aç',
     settingsLink: 'Ayarlar',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const tr = {
     folderUnit: 'klasör',
     updateBtn: 'Güncelle',
     updateAvailableArrow: 'Güncelleme var → {version}',
-    upToDate: '✓ En son sürüm',
+    upToDate: 'En son sürüm',
     noCompatibleTitle: 'Sitede ayarlarınıza uygun bir sürüm yok',
     noCompatible: '{version} için sürüm yok',
     directoryHashTitle: 'Klasörler karma değeriyle denetlenemez',
@@ -91,6 +97,8 @@ export const tr = {
     curseforgeKeyHint:
       'Ücretsiz anahtar: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'API anahtarı olmadan CurseForge verileri yüklenmez.',
+    showKey: 'Anahtarı göster',
+    hideKey: 'Anahtarı gizle',
     foldersSection: 'Klasörler',
     foldersHint: 'Göreli yollar Minecraft klasöründen itibaren çözümlenir, mutlak yollar olduğu gibi kullanılır.',
     modsLabel: 'Modlar',
@@ -120,6 +128,11 @@ export const tr = {
     loadingLevelDat: 'level.dat okunuyor…',
     gameRulesHeading: 'Oyun kuralları ({count})',
     allDataSummary: 'Tüm level.dat verileri (NBT)',
+    filterRules: 'Kuralları filtrele…',
+    tabs: {
+      overview: 'Genel bakış',
+      raw: 'NBT verileri',
+    },
     loadingRaw: 'Yükleniyor…',
     rawError: 'Hata: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const tr = {
     blocksFormat: '{size} blok',
     edit: {
       enable: 'Düzenlemeyi etkinleştir',
-      disable: 'Düzenlemeyi devre dışı bırak',
       warning: "Kaydetmeden önce bu dünyayı Minecraft'ta kapatın. Değiştirilen her dosyanın önceki sürümü _old uzantısıyla saklanır.",
       resetIcon: 'Simgeyi sıfırla',
       resetIconHint: 'Minecraft, bu dünya bir sonraki oynanışında yeni bir simge oluşturur.',

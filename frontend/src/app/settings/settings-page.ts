@@ -1,15 +1,44 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { MatAutocomplete, MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatCard } from '@angular/material/card';
+import { MatOption } from '@angular/material/core';
+import { MatFormField, MatHint, MatLabel, MatSuffix } from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
+import { MatInput } from '@angular/material/input';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatSelect } from '@angular/material/select';
+import { MatTooltip } from '@angular/material/tooltip';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
 
 import { ApiService, errorMessage } from '../api.service';
 import { I18nService } from '../i18n/i18n.service';
 import { PathInfo, Settings } from '../models';
+import { Banner } from '../shared/banner';
 
 @Component({
   selector: 'app-settings-page',
-  imports: [ReactiveFormsModule],
+  imports: [
+    ReactiveFormsModule,
+    Banner,
+    MatAutocomplete,
+    MatAutocompleteTrigger,
+    MatButton,
+    MatCard,
+    MatFormField,
+    MatHint,
+    MatIcon,
+    MatIconButton,
+    MatInput,
+    MatLabel,
+    MatOption,
+    MatProgressSpinner,
+    MatSelect,
+    MatSuffix,
+    MatTooltip,
+  ],
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.scss',
 })
@@ -30,6 +59,9 @@ export class SettingsPage {
     datapacksDir: '',
     savesDir: '',
   });
+
+  readonly loaderOptions = ['neoforge', 'forge', 'fabric', 'quilt'];
+  readonly showKey = signal(false);
 
   readonly paths = signal<PathInfo[]>([]);
   readonly loading = signal(true);

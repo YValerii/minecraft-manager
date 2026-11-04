@@ -1,9 +1,15 @@
 export const pt = {
+  common: {
+    confirm: 'Confirmar',
+    cancel: 'Cancelar',
+    clear: 'Limpar',
+  },
   langSwitcher: {
     ariaLabel: 'Idioma',
   },
   app: {
     sectionsAriaLabel: 'Secções',
+    openNav: 'Abrir navegação',
     settingsLink: 'Definições',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const pt = {
     folderUnit: 'pasta',
     updateBtn: 'Atualizar',
     updateAvailableArrow: 'Atualização disponível → {version}',
-    upToDate: '✓ Versão mais recente',
+    upToDate: 'Versão mais recente',
     noCompatibleTitle: 'O site não tem nenhuma versão compatível com as suas definições',
     noCompatible: 'Sem versão para {version}',
     directoryHashTitle: 'Não é possível verificar pastas por hash',
@@ -91,6 +97,8 @@ export const pt = {
     curseforgeKeyHint:
       'Chave gratuita: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Sem uma chave de API, os dados do CurseForge não serão carregados.',
+    showKey: 'Mostrar chave',
+    hideKey: 'Ocultar chave',
     foldersSection: 'Pastas',
     foldersHint: 'Os caminhos relativos partem da pasta do Minecraft; os absolutos são usados tal como estão.',
     modsLabel: 'Mods',
@@ -120,6 +128,11 @@ export const pt = {
     loadingLevelDat: 'A ler level.dat…',
     gameRulesHeading: 'Regras do jogo ({count})',
     allDataSummary: 'Todos os dados de level.dat (NBT)',
+    filterRules: 'Filtrar regras…',
+    tabs: {
+      overview: 'Visão geral',
+      raw: 'Dados NBT',
+    },
     loadingRaw: 'A carregar…',
     rawError: 'Erro: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const pt = {
     blocksFormat: '{size} blocos',
     edit: {
       enable: 'Ativar edição',
-      disable: 'Desativar edição',
       warning: 'Feche este mundo no Minecraft antes de guardar. A versão anterior de cada ficheiro alterado é mantida com o sufixo _old.',
       resetIcon: 'Repor ícone',
       resetIconHint: 'O Minecraft cria um novo ícone da próxima vez que este mundo for jogado.',

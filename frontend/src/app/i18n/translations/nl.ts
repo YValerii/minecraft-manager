@@ -1,9 +1,15 @@
 export const nl = {
+  common: {
+    confirm: 'Bevestigen',
+    cancel: 'Annuleren',
+    clear: 'Wissen',
+  },
   langSwitcher: {
     ariaLabel: 'Taal',
   },
   app: {
     sectionsAriaLabel: 'Secties',
+    openNav: 'Navigatie openen',
     settingsLink: 'Instellingen',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const nl = {
     folderUnit: 'map',
     updateBtn: 'Bijwerken',
     updateAvailableArrow: 'Update beschikbaar → {version}',
-    upToDate: '✓ Nieuwste versie',
+    upToDate: 'Nieuwste versie',
     noCompatibleTitle: 'De site heeft geen versie die bij je instellingen past',
     noCompatible: 'Geen versie voor {version}',
     directoryHashTitle: 'Mappen kunnen niet via een hash worden gecontroleerd',
@@ -91,6 +97,8 @@ export const nl = {
     curseforgeKeyHint:
       'Gratis sleutel: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Zonder API-sleutel worden CurseForge-gegevens niet geladen.',
+    showKey: 'Sleutel tonen',
+    hideKey: 'Sleutel verbergen',
     foldersSection: 'Mappen',
     foldersHint: 'Relatieve paden gaan uit van de Minecraft-map, absolute paden worden ongewijzigd gebruikt.',
     modsLabel: 'Mods',
@@ -120,6 +128,11 @@ export const nl = {
     loadingLevelDat: 'level.dat lezen…',
     gameRulesHeading: 'Spelregels ({count})',
     allDataSummary: 'Alle level.dat-gegevens (NBT)',
+    filterRules: 'Regels filteren…',
+    tabs: {
+      overview: 'Overzicht',
+      raw: 'NBT-gegevens',
+    },
     loadingRaw: 'Laden…',
     rawError: 'Fout: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const nl = {
     blocksFormat: '{size} blokken',
     edit: {
       enable: 'Bewerken inschakelen',
-      disable: 'Bewerken uitschakelen',
       warning: 'Sluit deze wereld in Minecraft voordat je opslaat. De vorige versie van elk gewijzigd bestand wordt bewaard met het achtervoegsel _old.',
       resetIcon: 'Pictogram herstellen',
       resetIconHint: 'Minecraft maakt een nieuw pictogram wanneer deze wereld de volgende keer wordt gespeeld.',

@@ -122,7 +122,7 @@ function createWindow() {
     minWidth: 480,
     minHeight: 400,
     show: false,
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#12151a' : '#f4f6f8',
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#121410' : '#f9faf3',
     title: 'Minecraft Manager',
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
   });

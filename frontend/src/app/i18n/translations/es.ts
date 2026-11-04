@@ -1,9 +1,15 @@
 export const es = {
+  common: {
+    confirm: 'Confirmar',
+    cancel: 'Cancelar',
+    clear: 'Borrar',
+  },
   langSwitcher: {
     ariaLabel: 'Idioma',
   },
   app: {
     sectionsAriaLabel: 'Secciones',
+    openNav: 'Abrir navegación',
     settingsLink: 'Ajustes',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const es = {
     folderUnit: 'carpeta',
     updateBtn: 'Actualizar',
     updateAvailableArrow: 'Actualización disponible → {version}',
-    upToDate: '✓ Última versión',
+    upToDate: 'Última versión',
     noCompatibleTitle: 'El sitio no tiene ninguna versión que coincida con tus ajustes',
     noCompatible: 'No hay versión para {version}',
     directoryHashTitle: 'Las carpetas no se pueden comprobar por hash',
@@ -91,6 +97,8 @@ export const es = {
     curseforgeKeyHint:
       'Clave gratuita: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Sin una clave de API, los datos de CurseForge no se cargarán.',
+    showKey: 'Mostrar clave',
+    hideKey: 'Ocultar clave',
     foldersSection: 'Carpetas',
     foldersHint: 'Las rutas relativas parten de la carpeta de Minecraft; las absolutas se usan tal cual.',
     modsLabel: 'Mods',
@@ -120,6 +128,11 @@ export const es = {
     loadingLevelDat: 'Leyendo level.dat…',
     gameRulesHeading: 'Reglas del juego ({count})',
     allDataSummary: 'Todos los datos de level.dat (NBT)',
+    filterRules: 'Filtrar reglas…',
+    tabs: {
+      overview: 'Resumen',
+      raw: 'Datos NBT',
+    },
     loadingRaw: 'Cargando…',
     rawError: 'Error: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const es = {
     blocksFormat: '{size} bloques',
     edit: {
       enable: 'Activar edición',
-      disable: 'Desactivar edición',
       warning: 'Cierra este mundo en Minecraft antes de guardar. La versión anterior de cada archivo modificado se conserva con el sufijo _old.',
       resetIcon: 'Restablecer icono',
       resetIconHint: 'Minecraft creará un icono nuevo la próxima vez que se juegue este mundo.',

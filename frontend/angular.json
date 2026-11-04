@@ -25,6 +25,7 @@
               }
             ],
             "styles": [
+              "@fontsource-variable/roboto/index.css",
               "src/styles.scss"
             ]
           },
@@ -36,6 +37,12 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "test": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "polyfills": ["@angular/compiler"]
             }
           },
           "defaultConfiguration": "production"
@@ -43,8 +50,9 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "buildTarget": "minecraft-manager:build:development",
+            "buildTarget": "minecraft-manager:build:test",
             "tsConfig": "tsconfig.spec.json",
+            "providersFile": "src/test-providers.ts",
             "coverageInclude": ["src/app/**/*.ts"],
             "coverageExclude": ["src/app/i18n/translations/**", "src/app/models.ts"]
           }

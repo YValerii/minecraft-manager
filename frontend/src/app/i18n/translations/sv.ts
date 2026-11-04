@@ -1,9 +1,15 @@
 export const sv = {
+  common: {
+    confirm: 'Bekräfta',
+    cancel: 'Avbryt',
+    clear: 'Rensa',
+  },
   langSwitcher: {
     ariaLabel: 'Språk',
   },
   app: {
     sectionsAriaLabel: 'Avsnitt',
+    openNav: 'Öppna navigering',
     settingsLink: 'Inställningar',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const sv = {
     folderUnit: 'mapp',
     updateBtn: 'Uppdatera',
     updateAvailableArrow: 'Uppdatering tillgänglig → {version}',
-    upToDate: '✓ Senaste versionen',
+    upToDate: 'Senaste versionen',
     noCompatibleTitle: 'Webbplatsen har ingen version som passar dina inställningar',
     noCompatible: 'Ingen version för {version}',
     directoryHashTitle: 'Mappar kan inte kontrolleras med hash',
@@ -91,6 +97,8 @@ export const sv = {
     curseforgeKeyHint:
       'Gratis nyckel: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Utan API-nyckel läses inga data in från CurseForge.',
+    showKey: 'Visa nyckel',
+    hideKey: 'Dölj nyckel',
     foldersSection: 'Mappar',
     foldersHint: 'Relativa sökvägar utgår från Minecraft-mappen, absoluta sökvägar används som de är.',
     modsLabel: 'Moddar',
@@ -120,6 +128,11 @@ export const sv = {
     loadingLevelDat: 'Läser level.dat…',
     gameRulesHeading: 'Spelregler ({count})',
     allDataSummary: 'Alla level.dat-data (NBT)',
+    filterRules: 'Filtrera regler…',
+    tabs: {
+      overview: 'Översikt',
+      raw: 'NBT-data',
+    },
     loadingRaw: 'Läser in…',
     rawError: 'Fel: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const sv = {
     blocksFormat: '{size} block',
     edit: {
       enable: 'Aktivera redigering',
-      disable: 'Inaktivera redigering',
       warning: 'Stäng den här världen i Minecraft innan du sparar. Den föregående versionen av varje ändrad fil behålls med ändelsen _old.',
       resetIcon: 'Återställ ikon',
       resetIconHint: 'Minecraft skapar en ny ikon nästa gång världen spelas.',

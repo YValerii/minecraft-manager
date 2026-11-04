@@ -1,9 +1,15 @@
 export const pl = {
+  common: {
+    confirm: 'Potwierdź',
+    cancel: 'Anuluj',
+    clear: 'Wyczyść',
+  },
   langSwitcher: {
     ariaLabel: 'Język',
   },
   app: {
     sectionsAriaLabel: 'Sekcje',
+    openNav: 'Otwórz nawigację',
     settingsLink: 'Ustawienia',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const pl = {
     folderUnit: 'folder',
     updateBtn: 'Aktualizuj',
     updateAvailableArrow: 'Dostępna aktualizacja → {version}',
-    upToDate: '✓ Najnowsza wersja',
+    upToDate: 'Najnowsza wersja',
     noCompatibleTitle: 'Serwis nie ma wersji pasującej do Twoich ustawień',
     noCompatible: 'Brak wersji dla {version}',
     directoryHashTitle: 'Folderów nie można sprawdzić za pomocą hasha',
@@ -91,6 +97,8 @@ export const pl = {
     curseforgeKeyHint:
       'Darmowy klucz: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Bez klucza API dane z CurseForge nie zostaną załadowane.',
+    showKey: 'Pokaż klucz',
+    hideKey: 'Ukryj klucz',
     foldersSection: 'Foldery',
     foldersHint: 'Ścieżki względne liczone są od folderu Minecrafta, ścieżki bezwzględne używane są bez zmian.',
     modsLabel: 'Mody',
@@ -120,6 +128,11 @@ export const pl = {
     loadingLevelDat: 'Odczytywanie level.dat…',
     gameRulesHeading: 'Zasady gry ({count})',
     allDataSummary: 'Wszystkie dane level.dat (NBT)',
+    filterRules: 'Filtruj reguły…',
+    tabs: {
+      overview: 'Przegląd',
+      raw: 'Dane NBT',
+    },
     loadingRaw: 'Ładowanie…',
     rawError: 'Błąd: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const pl = {
     blocksFormat: 'Bloki: {size}',
     edit: {
       enable: 'Włącz edycję',
-      disable: 'Wyłącz edycję',
       warning: 'Przed zapisaniem zamknij ten świat w Minecrafcie. Poprzednia wersja każdego zmienionego pliku jest zachowywana z przyrostkiem _old.',
       resetIcon: 'Zresetuj ikonę',
       resetIconHint: 'Minecraft utworzy nową ikonę przy następnej grze w tym świecie.',

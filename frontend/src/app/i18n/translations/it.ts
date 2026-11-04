@@ -1,9 +1,15 @@
 export const it = {
+  common: {
+    confirm: 'Conferma',
+    cancel: 'Annulla',
+    clear: 'Cancella',
+  },
   langSwitcher: {
     ariaLabel: 'Lingua',
   },
   app: {
     sectionsAriaLabel: 'Sezioni',
+    openNav: 'Apri navigazione',
     settingsLink: 'Impostazioni',
     launcher: {
       label: 'Launcher',
@@ -54,7 +60,7 @@ export const it = {
     folderUnit: 'cartella',
     updateBtn: 'Aggiorna',
     updateAvailableArrow: 'Aggiornamento disponibile → {version}',
-    upToDate: '✓ Ultima versione',
+    upToDate: 'Ultima versione',
     noCompatibleTitle: 'Il sito non ha una versione adatta alle tue impostazioni',
     noCompatible: 'Nessuna versione per {version}',
     directoryHashTitle: "Le cartelle non possono essere verificate tramite hash",
@@ -91,6 +97,8 @@ export const it = {
     curseforgeKeyHint:
       'Chiave gratuita: <a href="https://console.curseforge.com" target="_blank" rel="noopener">console.curseforge.com</a>.',
     needsKeyWarning: 'Senza una chiave API, i dati di CurseForge non verranno caricati.',
+    showKey: 'Mostra chiave',
+    hideKey: 'Nascondi chiave',
     foldersSection: 'Cartelle',
     foldersHint: 'I percorsi relativi partono dalla cartella di Minecraft, quelli assoluti vengono usati così come sono.',
     modsLabel: 'Mod',
@@ -120,6 +128,11 @@ export const it = {
     loadingLevelDat: 'Lettura di level.dat…',
     gameRulesHeading: 'Regole di gioco ({count})',
     allDataSummary: 'Tutti i dati di level.dat (NBT)',
+    filterRules: 'Filtra regole…',
+    tabs: {
+      overview: 'Panoramica',
+      raw: 'Dati NBT',
+    },
     loadingRaw: 'Caricamento…',
     rawError: 'Errore: {message}',
     sections: {
@@ -173,7 +186,6 @@ export const it = {
     blocksFormat: '{size} blocchi',
     edit: {
       enable: 'Abilita modifica',
-      disable: 'Disabilita modifica',
       warning: 'Chiudi questo mondo in Minecraft prima di salvare. La versione precedente di ogni file modificato viene conservata con il suffisso _old.',
       resetIcon: 'Reimposta icona',
       resetIconHint: 'Minecraft creerà una nuova icona la prossima volta che si giocherà questo mondo.',

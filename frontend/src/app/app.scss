@@ -1,134 +1,73 @@
 :host {
   display: block;
+  height: 100dvh;
 }
 
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: var(--topbar-bg);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
+.shell {
+  height: 100%;
+}
 
-  .inner {
-    max-width: 1320px; // Wider than the page content: the bar has to fit every tab on one row in a 1280px window.
-    margin: 0 auto;
-    padding: 0 20px;
+.nav {
+  // The drawer's content is a column: brand, sections, and settings kept at the bottom.
+  ::ng-deep .mat-drawer-inner-container {
     display: flex;
-    align-items: stretch;
-    flex-wrap: wrap;
-    gap: 0 14px;
-    min-height: 56px;
+    flex-direction: column;
   }
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: var(--text);
-  font-weight: 700;
-  font-size: 16px;
-  white-space: nowrap;
+  gap: 12px;
+  padding: 16px 20px;
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-title-medium);
 
   &:hover {
     text-decoration: none;
   }
-
-  .logo {
-    width: 24px;
-    height: 24px;
-    image-rendering: pixelated;
-    background:
-      linear-gradient(var(--accent) 0 28%, transparent 28%),
-      linear-gradient(#8a5a36 0 100%);
-    border-radius: 3px;
-    box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25);
+  img {
+    flex: none;
   }
 }
 
-.tabs {
-  display: flex;
-  align-items: stretch;
-  flex-wrap: wrap;
-  gap: 2px;
+.sections {
   flex: 1;
 }
 
-.tab {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 48px;
-  padding: 0 10px;
-  color: var(--muted);
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-  font-weight: 500;
-
-  &:hover {
-    color: var(--text);
-    text-decoration: none;
-  }
-  &.active {
-    color: var(--text);
-    border-bottom-color: var(--accent);
-  }
-  .emoji {
-    font-size: 16px;
-  }
+mat-nav-list {
+  padding-inline: 12px;
 }
 
-select.lang-switch {
-  width: auto;
-  align-self: center;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  background: var(--fill-subtle);
-  cursor: pointer;
+.bottom {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
 
-  option {
-    color: var(--text);
-    background: var(--panel);
-  }
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  gap: 8px;
+  padding-inline: 16px 12px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.compact-logo {
+  flex: none;
 }
 
 .content {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 24px 20px 64px;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding: 24px 24px 64px;
 }
 
-@media (max-width: 700px) {
-  .topbar {
-    position: static;
+@media (max-width: 600px) {
+  .content {
+    padding: 16px 16px 48px;
   }
-  .tabs {
-    order: 1;
-    flex-basis: 100%;
-  }
-}
-
-.launch,
-.theme-toggle {
-  align-self: center;
-  white-space: nowrap;
-}
-
-.theme-toggle {
-  padding-inline: 8px;
-}
-
-.toast {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  z-index: 40;
-  max-width: min(420px, calc(100vw - 40px));
-  margin: 0;
-  background: var(--panel);
-  box-shadow: 0 8px 24px var(--shadow);
 }

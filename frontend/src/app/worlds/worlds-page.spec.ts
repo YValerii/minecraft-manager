@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
+import { MatDialog } from '@angular/material/dialog';
 import { provideRouter } from '@angular/router';
 import { NEVER, of, Subject, throwError } from 'rxjs';
 
@@ -24,6 +24,7 @@ describe('WorldsPage', () => {
   let api: {
     worlds: ReturnType<typeof vi.fn>;
     world: ReturnType<typeof vi.fn>;
+    worldRaw: ReturnType<typeof vi.fn>;
     worldIconUrl: ReturnType<typeof vi.fn>;
   };
   let i18n: I18nService;
@@ -49,6 +50,7 @@ describe('WorldsPage', () => {
     api = {
       worlds: vi.fn(() => of([WORLD])),
       world: vi.fn(() => NEVER),
+      worldRaw: vi.fn(() => NEVER),
       worldIconUrl: vi.fn((folder: string) => `/icon/${folder}`),
     };
     TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: ApiService, useValue: api }] });
@@ -56,18 +58,20 @@ describe('WorldsPage', () => {
     i18n.lang.set('en');
   });
 
+  afterEach(() => TestBed.inject(MatDialog).closeAll());
+
   it('reads the list again when the open world was changed', async () => {
     const fixture = await create();
     tile(fixture).click();
     await settle(fixture);
     expect(api.worlds).toHaveBeenCalledTimes(1);
 
-    const modal: WorldModal = fixture.debugElement.query(By.directive(WorldModal)).componentInstance;
+    const modal: WorldModal = TestBed.inject(MatDialog).openDialogs[0].componentInstance;
     modal.changed.emit();
     await settle(fixture);
 
     expect(api.worlds).toHaveBeenCalledTimes(2);
-    expect(fixture.componentInstance.selected()).toBe('w');
+    expect(TestBed.inject(MatDialog).openDialogs).toHaveLength(1);
   });
 
   it('shows a loading message, then the worlds', async () => {
@@ -160,17 +164,18 @@ describe('WorldsPage', () => {
 
   it('opens the details of a world and closes them again', async () => {
     const fixture = await create();
-    expect(fixture.nativeElement.querySelector('app-world-modal')).toBeNull();
+    expect(document.querySelector('app-world-modal')).toBeNull();
 
     tile(fixture).click();
     await settle(fixture);
 
-    expect(fixture.nativeElement.querySelector('app-world-modal')).not.toBeNull();
+    expect(document.querySelector('app-world-modal')).not.toBeNull();
     expect(api.world).toHaveBeenCalledWith('w');
 
-    fixture.nativeElement.querySelector('app-world-modal button.close').click();
+    document.querySelector<HTMLButtonElement>('app-world-modal button.close')?.click();
     await settle(fixture);
 
-    expect(fixture.nativeElement.querySelector('app-world-modal')).toBeNull();
+    expect(TestBed.inject(MatDialog).openDialogs).toHaveLength(0);
+    expect(document.querySelector('app-world-modal')).toBeNull();
   });
 });

@@ -68,6 +68,13 @@ describe('ApiService', () => {
     expectCall('POST', '/api/content/resourcepacks/install-all', {});
   });
 
+  it('changes worlds, encoding folder names', () => {
+    api.updateWorld('My World', { name: 'New' }).subscribe();
+    expectCall('PATCH', '/api/worlds/My%20World', { name: 'New' });
+    api.resetWorldIcon('a/b').subscribe();
+    expectCall('DELETE', '/api/worlds/a%2Fb/icon');
+  });
+
   it('reads worlds, encoding folder names', () => {
     api.worlds().subscribe();
     expectCall('GET', '/api/worlds');

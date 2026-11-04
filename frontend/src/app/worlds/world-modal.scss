@@ -122,6 +122,78 @@ dl {
     gap: 10px;
     padding: 4px 0;
     border-bottom: 1px solid var(--line-subtle);
+
+    code {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    input[type='checkbox'] {
+      flex: none;
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+    }
+    input[type='number'],
+    input[type='text'] {
+      flex: none;
+      width: 104px;
+      padding: 4px 8px;
+    }
+  }
+}
+
+.saved {
+  margin-top: 14px;
+}
+
+.editor {
+  display: grid;
+  gap: 12px;
+
+  .field {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+
+    > span {
+      color: var(--muted);
+    }
+  }
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+
+    input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+    }
+  }
+  .icon-reset {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+}
+
+.edit-actions {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--panel-2);
+
+  .banner {
+    margin-bottom: 10px;
+  }
+  .buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
   }
 }
 
@@ -148,7 +220,8 @@ dl {
 }
 
 @media (max-width: 560px) {
-  .row {
+  .row,
+  .editor .field {
     grid-template-columns: 1fr;
     gap: 2px;
   }

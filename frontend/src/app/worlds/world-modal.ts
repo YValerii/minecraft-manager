@@ -1,5 +1,5 @@
 import { Component, HostListener, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { Observable, firstValueFrom } from 'rxjs';
 
 import { ApiService, errorMessage } from '../api.service';
 import {
@@ -12,7 +12,7 @@ import {
   yesNo,
 } from '../format';
 import { I18nService } from '../i18n/i18n.service';
-import { WorldDetails } from '../models';
+import { WorldDetails, WorldEdit } from '../models';
 
 interface Row {
   label: string;
@@ -22,6 +22,16 @@ interface Row {
 interface Section {
   title: string;
   rows: Row[];
+}
+
+/** The values being edited, as the form shows them. */
+interface Draft {
+  name: string;
+  gameMode: string;
+  difficulty: string;
+  hardcore: boolean;
+  allowCommands: boolean;
+  gameRules: Record<string, string>;
 }
 
 @Component({
@@ -35,6 +45,8 @@ export class WorldModal {
 
   readonly folder = input.required<string>();
   readonly closed = output<void>();
+  /** The world on disk changed, so anything showing it is out of date. */
+  readonly changed = output<void>();
 
   readonly details = signal<WorldDetails | null>(null);
   readonly loading = signal(true);
@@ -43,8 +55,20 @@ export class WorldModal {
 
   readonly raw = signal<string | null>(null);
   readonly rawLoading = signal(false);
+  private rawOpen = false;
+
+  /** Editing is off until asked for, and goes back to off after saving: null means read-only. */
+  readonly draft = signal<Draft | null>(null);
+  readonly busy = signal(false);
+  readonly editError = signal<string | null>(null);
+  readonly saved = signal(false);
 
   readonly iconUrl = computed(() => this.api.worldIconUrl(this.folder()));
+  // Also checks hasIcon, since the browser may have the icon cached for a while after it is reset.
+  readonly showIcon = computed(() => !this.iconBroken() && (this.details()?.summary.hasIcon ?? true));
+
+  readonly gameModeOptions = computed(() => this.options(GAME_MODE_LABELS, this.draft()?.gameMode));
+  readonly difficultyOptions = computed(() => this.options(DIFFICULTY_LABELS, this.draft()?.difficulty));
 
   readonly gameRules = computed(() => {
     const rules = this.details()?.gameRules;
@@ -52,6 +76,32 @@ export class WorldModal {
     return Object.entries(rules)
       .map(([name, value]) => ({ name, value: String(value) }))
       .sort((a, b) => a.name.localeCompare(b.name));
+  });
+
+  /** Only what differs from the world as loaded. */
+  readonly changes = computed<WorldEdit>(() => {
+    const draft = this.draft();
+    const d = this.details();
+    if (!draft || !d) return {};
+    const edit: WorldEdit = {};
+    if (draft.name.trim() !== d.summary.name) edit.name = draft.name.trim();
+    if (draft.gameMode !== (d.summary.gameMode ?? '')) edit.gameMode = draft.gameMode;
+    if (draft.difficulty !== (d.difficulty ?? '')) edit.difficulty = draft.difficulty;
+    if (draft.hardcore !== d.summary.hardcore) edit.hardcore = draft.hardcore;
+    if (draft.allowCommands !== (d.allowCommands ?? false)) edit.allowCommands = draft.allowCommands;
+    const rules = this.gameRules().filter((g) => draft.gameRules[g.name] !== g.value);
+    if (rules.length > 0) {
+      edit.gameRules = Object.fromEntries(rules.map((g) => [g.name, draft.gameRules[g.name]]));
+    }
+    return edit;
+  });
+
+  readonly dirty = computed(() => Object.keys(this.changes()).length > 0);
+
+  readonly canSave = computed(() => {
+    const draft = this.draft();
+    if (!draft || !this.dirty() || this.busy() || !draft.name.trim()) return false;
+    return this.gameRules().every((g) => this.ruleKind(g.value) !== 'number' || INTEGER.test(draft.gameRules[g.name]));
   });
 
   readonly sections = computed<Section[]>(() => {
@@ -165,7 +215,11 @@ export class WorldModal {
     this.error.set(null);
     this.details.set(null);
     this.raw.set(null);
+    this.rawOpen = false;
     this.iconBroken.set(false);
+    this.draft.set(null);
+    this.editError.set(null);
+    this.saved.set(false);
     try {
       const d = await firstValueFrom(this.api.world(folder));
       if (this.folder() === folder) this.details.set(d);
@@ -178,12 +232,15 @@ export class WorldModal {
 
   /** The full level.dat tree is only loaded once the section is expanded. */
   async onRawToggle(event: Event): Promise<void> {
-    const open = (event.target as HTMLDetailsElement).open;
-    if (!open || this.raw() !== null || this.rawLoading()) return;
-    const folder = this.folder();
+    this.rawOpen = (event.target as HTMLDetailsElement).open;
+    if (!this.rawOpen || this.raw() !== null || this.rawLoading()) return;
+    await this.loadRaw();
+  }
+
+  private async loadRaw(): Promise<void> {
     this.rawLoading.set(true);
     try {
-      const tree = await firstValueFrom(this.api.worldRaw(folder));
+      const tree = await firstValueFrom(this.api.worldRaw(this.folder()));
       this.raw.set(JSON.stringify(tree, null, 2));
     } catch (e) {
       this.raw.set(this.i18n.t('worldModal.rawError', { message: errorMessage(e, this.i18n) }));
@@ -192,15 +249,100 @@ export class WorldModal {
     }
   }
 
+  // ---- editing
+
+  toggleEditing(): void {
+    const d = this.details();
+    if (this.draft()) {
+      if (!this.confirmDiscard()) return;
+      this.draft.set(null);
+    } else if (d) {
+      this.draft.set({
+        name: d.summary.name,
+        gameMode: d.summary.gameMode ?? '',
+        difficulty: d.difficulty ?? '',
+        hardcore: d.summary.hardcore,
+        allowCommands: d.allowCommands ?? false,
+        gameRules: Object.fromEntries(this.gameRules().map((g) => [g.name, g.value])),
+      });
+    }
+    this.editError.set(null);
+    this.saved.set(false);
+  }
+
+  patchDraft(patch: Partial<Draft>): void {
+    this.draft.update((draft) => draft && { ...draft, ...patch });
+  }
+
+  setRule(name: string, value: string): void {
+    this.draft.update((draft) => draft && { ...draft, gameRules: { ...draft.gameRules, [name]: value } });
+  }
+
+  ruleKind(value: string): 'boolean' | 'number' | 'text' {
+    if (value === 'true' || value === 'false') return 'boolean';
+    return INTEGER.test(value) ? 'number' : 'text';
+  }
+
+  value(event: Event): string {
+    return (event.target as HTMLInputElement).value;
+  }
+
+  checked(event: Event): boolean {
+    return (event.target as HTMLInputElement).checked;
+  }
+
+  async save(): Promise<void> {
+    if (!this.canSave()) return;
+    if (await this.change(this.api.updateWorld(this.folder(), this.changes()))) {
+      this.draft.set(null);
+      this.saved.set(true);
+    }
+  }
+
+  async resetIcon(): Promise<void> {
+    if (this.busy() || !confirm(this.i18n.t('worldModal.edit.resetIconConfirm'))) return;
+    await this.change(this.api.resetWorldIcon(this.folder()));
+  }
+
+  /** Sends a change to the backend and shows the world as it now is. Unsaved edits stay in the form. */
+  private async change(request: Observable<WorldDetails>): Promise<boolean> {
+    this.busy.set(true);
+    this.editError.set(null);
+    try {
+      this.details.set(await firstValueFrom(request));
+      this.raw.set(null);
+      if (this.rawOpen) void this.loadRaw();
+      this.changed.emit();
+      return true;
+    } catch (e) {
+      this.editError.set(errorMessage(e, this.i18n));
+      return false;
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  private confirmDiscard(): boolean {
+    return !this.dirty() || confirm(this.i18n.t('worldModal.edit.discardConfirm'));
+  }
+
+  /** The known values, plus the current one if it is something else, so showing the form doesn't change it. */
+  private options(labels: Record<string, string>, current: string | undefined): { value: string; label: string }[] {
+    const known = Object.keys(labels).map((value) => ({ value, label: label(this.i18n, labels, value) ?? value }));
+    return current === undefined || current in labels ? known : [{ value: current, label: current || '—' }, ...known];
+  }
+
   @HostListener('document:keydown.escape')
   close(): void {
-    this.closed.emit();
+    if (this.confirmDiscard()) this.closed.emit();
   }
 
   onBackdrop(event: MouseEvent): void {
     if (event.target === event.currentTarget) this.close();
   }
 }
+
+const INTEGER = /^-?\d+$/;
 
 /** Drops empty values and sections with no data. */
 function build(input: { title: string; rows: [string, string | number | null | undefined][] }[]): Section[] {

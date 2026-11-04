@@ -117,6 +117,16 @@ export interface WorldDetails {
   gameRules: Record<string, unknown> | null;
 }
 
+/** The changes to make to a world; whatever is left out stays as it is. */
+export interface WorldEdit {
+  name?: string;
+  gameMode?: string;
+  difficulty?: string;
+  hardcore?: boolean;
+  allowCommands?: boolean;
+  gameRules?: Record<string, string>;
+}
+
 export interface LauncherStatus {
   available: boolean;
 }

@@ -1,8 +1,13 @@
 package com.mcmanager.world;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -24,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mcmanager.common.ApiException;
 import com.mcmanager.world.WorldDtos.WorldDetails;
+import com.mcmanager.world.WorldDtos.WorldEdit;
 import com.mcmanager.world.WorldDtos.WorldSummary;
 
 @WebMvcTest(WorldController.class)
@@ -100,5 +107,44 @@ class WorldControllerTest {
         mvc.perform(get("/api/worlds/w/icon"))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(""));
+    }
+
+    @Test
+    void editPassesTheChangesOnAndReturnsTheNewDetails() throws Exception {
+        WorldEdit edit = new WorldEdit("New", null, null, null, true, Map.of("rule", "5"));
+        when(service.edit("w", edit)).thenReturn(new WorldDetails(SUMMARY, "/p", 10, 2, null, null, null, null, null,
+                null, "1", null, null, null, null, null, null, null, List.of(), null, List.of(), List.of(), List.of(),
+                null, 0, List.of(), null));
+
+        mvc.perform(patch("/api/worlds/w").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"New\",\"allowCommands\":true,\"gameRules\":{\"rule\":\"5\"}}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.summary.folder").value("w"));
+    }
+
+    @Test
+    void editOnlyAcceptsJsonSoOtherSitesCannotCallIt() throws Exception {
+        mvc.perform(patch("/api/worlds/w").contentType(MediaType.TEXT_PLAIN).content("{}"));
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void anEditOfAnOpenWorldReportsTheConflict() throws Exception {
+        when(service.edit(eq("w"), any())).thenThrow(new ApiException(HttpStatus.CONFLICT, "Open"));
+
+        mvc.perform(patch("/api/worlds/w").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Open"));
+    }
+
+    @Test
+    void resetIconReturnsTheNewDetails() throws Exception {
+        when(service.resetIcon("w")).thenReturn(new WorldDetails(SUMMARY, "/p", 10, 2, null, null, null, null, null,
+                null, "1", null, null, null, null, null, null, null, List.of(), null, List.of(), List.of(), List.of(),
+                null, 0, List.of(), null));
+
+        mvc.perform(delete("/api/worlds/w/icon"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.path").value("/p"));
     }
 }

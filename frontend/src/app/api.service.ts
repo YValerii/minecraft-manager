@@ -12,6 +12,7 @@ import {
   Settings,
   UpdatesResult,
   WorldDetails,
+  WorldEdit,
   WorldSummary,
 } from './models';
 
@@ -69,6 +70,14 @@ export class ApiService {
 
   world(folder: string): Observable<WorldDetails> {
     return this.http.get<WorldDetails>(`/api/worlds/${encodeURIComponent(folder)}`);
+  }
+
+  updateWorld(folder: string, edit: WorldEdit): Observable<WorldDetails> {
+    return this.http.patch<WorldDetails>(`/api/worlds/${encodeURIComponent(folder)}`, edit);
+  }
+
+  resetWorldIcon(folder: string): Observable<WorldDetails> {
+    return this.http.delete<WorldDetails>(`/api/worlds/${encodeURIComponent(folder)}/icon`);
   }
 
   worldRaw(folder: string): Observable<unknown> {

@@ -1,11 +1,13 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { NEVER, of, Subject, throwError } from 'rxjs';
 
 import { ApiService } from '../api.service';
 import { I18nService } from '../i18n/i18n.service';
 import { WorldSummary } from '../models';
+import { WorldModal } from './world-modal';
 import { WorldsPage } from './worlds-page';
 
 const WORLD: WorldSummary = {
@@ -52,6 +54,20 @@ describe('WorldsPage', () => {
     TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: ApiService, useValue: api }] });
     i18n = TestBed.inject(I18nService);
     i18n.lang.set('en');
+  });
+
+  it('reads the list again when the open world was changed', async () => {
+    const fixture = await create();
+    tile(fixture).click();
+    await settle(fixture);
+    expect(api.worlds).toHaveBeenCalledTimes(1);
+
+    const modal: WorldModal = fixture.debugElement.query(By.directive(WorldModal)).componentInstance;
+    modal.changed.emit();
+    await settle(fixture);
+
+    expect(api.worlds).toHaveBeenCalledTimes(2);
+    expect(fixture.componentInstance.selected()).toBe('w');
   });
 
   it('shows a loading message, then the worlds', async () => {

@@ -140,6 +140,8 @@ Open **Settings** and check these, then save:
 | Shaders | `shaderpacks/*.zip` and folders |
 | Worlds | One tile per world. Click a tile for details from `level.dat`, including the full NBT tree. |
 
+To change a world, open its details and press **Enable editing**. Editing is off every time the details are opened. You can change the name, game mode, difficulty, hardcore, whether commands are allowed, and the game rules, and you can reset the icon so that Minecraft takes a new one the next time you play. Close the world in Minecraft first: changes to a world that's open are refused. The previous version of each changed file is kept next to it with the suffix `_old`, for example `level.dat_old`.
+
 Use the search box and the filters to narrow a list down to items with updates or unrecognized items.
 
 Files are identified by their hash, not their name, so a renamed file is still recognized. If a file isn't on Modrinth or CurseForge, such as a custom build or a folder pack, it's marked "Unrecognized" and shows the details stored inside the file instead.

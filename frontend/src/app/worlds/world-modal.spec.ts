@@ -55,6 +55,8 @@ describe('WorldModal', () => {
     world: ReturnType<typeof vi.fn>;
     worldRaw: ReturnType<typeof vi.fn>;
     worldIconUrl: ReturnType<typeof vi.fn>;
+    updateWorld: ReturnType<typeof vi.fn>;
+    resetWorldIcon: ReturnType<typeof vi.fn>;
   };
   let i18n: I18nService;
 
@@ -93,6 +95,8 @@ describe('WorldModal', () => {
       world: vi.fn(() => of(details())),
       worldRaw: vi.fn(() => of({ Data: { a: 1 } })),
       worldIconUrl: vi.fn((folder: string) => `/icon/${folder}`),
+      updateWorld: vi.fn(() => of(details())),
+      resetWorldIcon: vi.fn(() => of(details())),
     };
     TestBed.configureTestingModule({ providers: [{ provide: ApiService, useValue: api }] });
     i18n = TestBed.inject(I18nService);
@@ -455,6 +459,314 @@ describe('WorldModal', () => {
 
       expect(fixture.componentInstance.raw()).toBe(i18n.t('worldModal.rawError', { message: 'Broken' }));
       expect(fixture.componentInstance.rawLoading()).toBe(false);
+    });
+  });
+
+  describe('editing', () => {
+    const q = (fixture: ComponentFixture<WorldModal>, selector: string) => fixture.nativeElement.querySelector(selector);
+
+    function editable(overrides: Partial<WorldDetails> = {}): WorldDetails {
+      return details({
+        summary: { ...details().summary, gameMode: 'survival' },
+        difficulty: 'hard',
+        allowCommands: false,
+        gameRules: { 'minecraft:keep_inventory': true, 'minecraft:respawn_radius': 10, custom: 'abc' },
+        ...overrides,
+      });
+    }
+
+    async function createEditing(world = editable()): Promise<ComponentFixture<WorldModal>> {
+      api.world.mockReturnValue(of(world));
+      const fixture = await create();
+      q(fixture, 'button.edit-toggle').click();
+      await settle(fixture);
+      return fixture;
+    }
+
+    async function type(fixture: ComponentFixture<WorldModal>, selector: string, value: string): Promise<void> {
+      const input = q(fixture, selector);
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+      await settle(fixture);
+    }
+
+    async function choose(fixture: ComponentFixture<WorldModal>, selector: string, value: string): Promise<void> {
+      const select = q(fixture, selector);
+      select.value = value;
+      select.dispatchEvent(new Event('change'));
+      await settle(fixture);
+    }
+
+    async function tick(fixture: ComponentFixture<WorldModal>, selector: string): Promise<void> {
+      q(fixture, selector).click();
+      await settle(fixture);
+    }
+
+    afterEach(() => vi.unstubAllGlobals());
+
+    it('is off by default, showing no form', async () => {
+      api.world.mockReturnValue(of(editable()));
+      const fixture = await create();
+
+      expect(fixture.componentInstance.draft()).toBeNull();
+      expect(q(fixture, 'button.edit-toggle').getAttribute('aria-pressed')).toBe('false');
+      expect(q(fixture, 'button.edit-toggle').textContent).toContain(i18n.t('worldModal.edit.enable'));
+      expect(q(fixture, '.editor')).toBeNull();
+      expect(q(fixture, '.edit-actions')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.rule input')).toBeNull();
+    });
+
+    it('offers no switch until the world is loaded', async () => {
+      api.world.mockReturnValue(failure('x'));
+      const fixture = await create();
+
+      expect(q(fixture, 'button.edit-toggle')).toBeNull();
+    });
+
+    it('shows the current values once switched on, with nothing to save yet', async () => {
+      const fixture = await createEditing();
+
+      expect(q(fixture, 'button.edit-toggle').getAttribute('aria-pressed')).toBe('true');
+      expect(q(fixture, 'button.edit-toggle').textContent).toContain(i18n.t('worldModal.edit.disable'));
+      expect(q(fixture, '.edit-name').value).toBe('My World');
+      expect(q(fixture, '.edit-mode').value).toBe('survival');
+      expect(q(fixture, '.edit-difficulty').value).toBe('hard');
+      expect(q(fixture, '.edit-hardcore').checked).toBe(false);
+      expect(q(fixture, '.edit-commands').checked).toBe(false);
+      expect(fixture.componentInstance.changes()).toEqual({});
+      expect(q(fixture, 'button.save').disabled).toBe(true);
+    });
+
+    it('uses a control that suits each game rule', async () => {
+      const fixture = await createEditing();
+
+      const input = (rule: string) => q(fixture, `.rule input[aria-label="${rule}"]`);
+      expect(input('minecraft:keep_inventory').type).toBe('checkbox');
+      expect(input('minecraft:keep_inventory').checked).toBe(true);
+      expect(input('minecraft:respawn_radius').type).toBe('number');
+      expect(input('minecraft:respawn_radius').value).toBe('10');
+      expect(input('custom').type).toBe('text');
+      expect(fixture.nativeElement.querySelector('.rule .badge')).toBeNull();
+    });
+
+    it('sends only what changed, then goes back to read-only with the new values', async () => {
+      const updated = editable({ summary: { ...editable().summary, name: 'New' } });
+      api.updateWorld.mockReturnValue(of(updated));
+      const fixture = await createEditing();
+      const changed = vi.fn();
+      fixture.componentInstance.changed.subscribe(changed);
+
+      await type(fixture, '.edit-name', '  New ');
+      await choose(fixture, '.edit-mode', 'creative');
+      await choose(fixture, '.edit-difficulty', 'easy');
+      await tick(fixture, '.edit-hardcore');
+      await tick(fixture, '.edit-commands');
+      await tick(fixture, '.rule input[aria-label="minecraft:keep_inventory"]');
+      await type(fixture, '.rule input[aria-label="minecraft:respawn_radius"]', '3');
+      await tick(fixture, 'button.save');
+
+      expect(api.updateWorld).toHaveBeenCalledWith('w', {
+        name: 'New',
+        gameMode: 'creative',
+        difficulty: 'easy',
+        hardcore: true,
+        allowCommands: true,
+        gameRules: { 'minecraft:keep_inventory': 'false', 'minecraft:respawn_radius': '3' },
+      });
+      expect(changed).toHaveBeenCalledTimes(1);
+      expect(fixture.componentInstance.draft()).toBeNull();
+      expect(q(fixture, 'h2').textContent).toBe('New');
+      expect(q(fixture, '.banner.saved').textContent).toBe(i18n.t('worldModal.edit.saved'));
+    });
+
+    it('does not count a value changed back as a change', async () => {
+      const fixture = await createEditing();
+
+      await type(fixture, '.edit-name', 'Other');
+      expect(fixture.componentInstance.dirty()).toBe(true);
+      await type(fixture, '.edit-name', 'My World');
+
+      expect(fixture.componentInstance.dirty()).toBe(false);
+    });
+
+    it('does not offer saving an empty name or a rule that is not a whole number', async () => {
+      const fixture = await createEditing();
+
+      await type(fixture, '.edit-name', '   ');
+      expect(q(fixture, 'button.save').disabled).toBe(true);
+      expect(q(fixture, '.edit-name').getAttribute('aria-invalid')).toBe('true');
+      await fixture.componentInstance.save();
+      expect(api.updateWorld).not.toHaveBeenCalled();
+
+      await type(fixture, '.edit-name', 'New');
+      expect(q(fixture, 'button.save').disabled).toBe(false);
+      await type(fixture, '.rule input[aria-label="minecraft:respawn_radius"]', '');
+      expect(q(fixture, 'button.save').disabled).toBe(true);
+    });
+
+    it('keeps the form and shows the error when saving fails, such as for an open world', async () => {
+      api.updateWorld.mockReturnValue(failure('This world is open in Minecraft.'));
+      const fixture = await createEditing();
+      const changed = vi.fn();
+      fixture.componentInstance.changed.subscribe(changed);
+
+      await type(fixture, '.edit-name', 'New');
+      await tick(fixture, 'button.save');
+
+      expect(q(fixture, '.edit-actions .banner.error').textContent).toBe('This world is open in Minecraft.');
+      expect(q(fixture, '.edit-name').value).toBe('New');
+      expect(q(fixture, 'button.save').disabled).toBe(false);
+      expect(changed).not.toHaveBeenCalled();
+    });
+
+    it('blocks the buttons while saving', async () => {
+      const pending = new Subject<WorldDetails>();
+      api.updateWorld.mockReturnValue(pending);
+      const fixture = await createEditing();
+
+      await type(fixture, '.edit-name', 'New');
+      await tick(fixture, 'button.save');
+
+      expect(q(fixture, 'button.save').disabled).toBe(true);
+      expect(q(fixture, 'button.save').textContent).toContain(i18n.t('worldModal.edit.saving'));
+      expect(q(fixture, 'button.cancel').disabled).toBe(true);
+      expect(q(fixture, 'button.edit-toggle').disabled).toBe(true);
+
+      pending.next(editable());
+      pending.complete();
+      await settle(fixture);
+      expect(fixture.componentInstance.busy()).toBe(false);
+    });
+
+    it('reloads the raw data if it is open, and otherwise forgets it', async () => {
+      const fixture = await createEditing();
+      await toggleRaw(fixture, true);
+      expect(api.worldRaw).toHaveBeenCalledTimes(1);
+
+      await type(fixture, '.edit-name', 'New');
+      await tick(fixture, 'button.save');
+      expect(api.worldRaw).toHaveBeenCalledTimes(2);
+
+      await toggleRaw(fixture, false);
+      q(fixture, 'button.edit-toggle').click();
+      await settle(fixture);
+      await type(fixture, '.edit-name', 'Newer');
+      await tick(fixture, 'button.save');
+      expect(api.worldRaw).toHaveBeenCalledTimes(2);
+      expect(fixture.componentInstance.raw()).toBeNull();
+    });
+
+    it('switches off straight away when nothing changed', async () => {
+      const confirm = vi.fn(() => true);
+      vi.stubGlobal('confirm', confirm);
+      const fixture = await createEditing();
+
+      await tick(fixture, 'button.edit-toggle');
+
+      expect(confirm).not.toHaveBeenCalled();
+      expect(fixture.componentInstance.draft()).toBeNull();
+    });
+
+    for (const button of ['button.edit-toggle', 'button.cancel']) {
+      it(`asks before ${button} discards changes`, async () => {
+        const confirm = vi.fn(() => false);
+        vi.stubGlobal('confirm', confirm);
+        const fixture = await createEditing();
+        await type(fixture, '.edit-name', 'New');
+
+        await tick(fixture, button);
+        expect(confirm).toHaveBeenCalledWith(i18n.t('worldModal.edit.discardConfirm'));
+        expect(fixture.componentInstance.draft()).not.toBeNull();
+
+        confirm.mockReturnValue(true);
+        await tick(fixture, button);
+        expect(fixture.componentInstance.draft()).toBeNull();
+        expect(api.updateWorld).not.toHaveBeenCalled();
+      });
+    }
+
+    it('asks before closing discards changes', async () => {
+      const confirm = vi.fn(() => false);
+      vi.stubGlobal('confirm', confirm);
+      const fixture = await createEditing();
+      const closed = vi.fn();
+      fixture.componentInstance.closed.subscribe(closed);
+      await type(fixture, '.edit-name', 'New');
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      q(fixture, '.backdrop').click();
+      expect(closed).not.toHaveBeenCalled();
+
+      confirm.mockReturnValue(true);
+      q(fixture, 'button.close').click();
+      expect(closed).toHaveBeenCalledTimes(1);
+    });
+
+    it('starts over when the folder changes', async () => {
+      const fixture = await createEditing();
+      await type(fixture, '.edit-name', 'New');
+
+      fixture.componentRef.setInput('folder', 'other');
+      await settle(fixture);
+
+      expect(fixture.componentInstance.draft()).toBeNull();
+    });
+
+    it('leaves unknown values alone, showing them as they are', async () => {
+      const world = editable({ summary: { ...editable().summary, gameMode: 'custom' }, difficulty: null, allowCommands: null });
+      const fixture = await createEditing(world);
+
+      expect(q(fixture, '.edit-mode').value).toBe('custom');
+      expect(q(fixture, '.edit-difficulty').value).toBe('');
+      expect(q(fixture, '.edit-difficulty option').textContent).toBe('—');
+      expect(q(fixture, '.edit-commands').checked).toBe(false);
+      expect(fixture.componentInstance.changes()).toEqual({});
+    });
+
+    describe('resetting the icon', () => {
+      const withoutIcon = () => editable({ summary: { ...editable().summary, hasIcon: false } });
+
+      it('asks first', async () => {
+        vi.stubGlobal('confirm', vi.fn(() => false));
+        const fixture = await createEditing();
+
+        await tick(fixture, 'button.reset-icon');
+
+        expect(api.resetWorldIcon).not.toHaveBeenCalled();
+      });
+
+      it('removes the icon, even one the browser still has cached, and keeps unsaved edits', async () => {
+        vi.stubGlobal('confirm', vi.fn(() => true));
+        api.resetWorldIcon.mockReturnValue(of(withoutIcon()));
+        const fixture = await createEditing();
+        const changed = vi.fn();
+        fixture.componentInstance.changed.subscribe(changed);
+        await type(fixture, '.edit-name', 'New');
+
+        await tick(fixture, 'button.reset-icon');
+
+        expect(api.resetWorldIcon).toHaveBeenCalledWith('w');
+        expect(changed).toHaveBeenCalledTimes(1);
+        expect(q(fixture, 'img')).toBeNull();
+        expect(q(fixture, 'button.reset-icon')).toBeNull();
+        expect(q(fixture, '.edit-name').value).toBe('New');
+      });
+
+      it('shows the error when it fails', async () => {
+        vi.stubGlobal('confirm', vi.fn(() => true));
+        api.resetWorldIcon.mockReturnValue(failure('Open'));
+        const fixture = await createEditing();
+
+        await tick(fixture, 'button.reset-icon');
+
+        expect(q(fixture, '.edit-actions .banner.error').textContent).toBe('Open');
+      });
+
+      it('is not offered without an icon', async () => {
+        const fixture = await createEditing(withoutIcon());
+
+        expect(q(fixture, 'button.reset-icon')).toBeNull();
+      });
     });
   });
 

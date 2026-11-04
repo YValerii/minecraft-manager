@@ -1,6 +1,7 @@
 package com.mcmanager.world;
 
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -63,5 +64,15 @@ public final class WorldDtos {
             int playerCount,
             List<String> dimensions,
             JsonNode gameRules) {
+    }
+
+    /** The changes to make to a world; a null field (or a game rule left out) stays as it is. */
+    public record WorldEdit(
+            String name,
+            String gameMode,
+            String difficulty,
+            Boolean hardcore,
+            Boolean allowCommands,
+            Map<String, String> gameRules) {
     }
 }

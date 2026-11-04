@@ -55,5 +55,5 @@
 }
 
 @if (selected(); as folder) {
-  <app-world-modal [folder]="folder" (closed)="selected.set(null)" />
+  <app-world-modal [folder]="folder" (closed)="selected.set(null)" (changed)="load()" />
 }

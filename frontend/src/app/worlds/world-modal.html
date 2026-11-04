@@ -2,7 +2,7 @@
   <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="world-title">
     <header class="head">
       <div class="thumb">
-        @if (!iconBroken()) {
+        @if (showIcon()) {
           <img class="pixel" [src]="iconUrl()" alt="" (error)="iconBroken.set(true)" />
         } @else {
           <span aria-hidden="true">🌍</span>
@@ -19,6 +19,18 @@
           </p>
         }
       </div>
+      @if (details()) {
+        <button
+          class="btn small edit-toggle"
+          type="button"
+          [class.primary]="draft()"
+          [attr.aria-pressed]="draft() !== null"
+          [disabled]="busy()"
+          (click)="toggleEditing()"
+        >
+          ✎ {{ i18n.t(draft() ? 'worldModal.edit.disable' : 'worldModal.edit.enable') }}
+        </button>
+      }
       <button class="btn small close" type="button" (click)="close()" [attr.aria-label]="i18n.t('worldModal.closeAria')">✕</button>
     </header>
 
@@ -28,6 +40,69 @@
       } @else if (error(); as e) {
         <div class="banner error">{{ e }}</div>
       } @else {
+        @if (saved()) {
+          <div class="banner ok saved">{{ i18n.t('worldModal.edit.saved') }}</div>
+        }
+
+        @if (draft(); as dr) {
+          <section class="editor">
+            <div class="banner warn">{{ i18n.t('worldModal.edit.warning') }}</div>
+            <label class="field">
+              <span>{{ i18n.t('worldModal.rows.name') }}</span>
+              <input
+                class="edit-name"
+                type="text"
+                maxlength="256"
+                [value]="dr.name"
+                [attr.aria-invalid]="!dr.name.trim()"
+                (input)="patchDraft({ name: value($event) })"
+              />
+            </label>
+            <label class="field">
+              <span>{{ i18n.t('worldModal.rows.mode') }}</span>
+              <select class="edit-mode" (change)="patchDraft({ gameMode: value($event) })">
+                @for (o of gameModeOptions(); track o.value) {
+                  <option [value]="o.value" [selected]="o.value === dr.gameMode">{{ o.label }}</option>
+                }
+              </select>
+            </label>
+            <label class="field">
+              <span>{{ i18n.t('worldModal.rows.difficulty') }}</span>
+              <select class="edit-difficulty" (change)="patchDraft({ difficulty: value($event) })">
+                @for (o of difficultyOptions(); track o.value) {
+                  <option [value]="o.value" [selected]="o.value === dr.difficulty">{{ o.label }}</option>
+                }
+              </select>
+            </label>
+            <label class="check">
+              <input
+                class="edit-hardcore"
+                type="checkbox"
+                [checked]="dr.hardcore"
+                (change)="patchDraft({ hardcore: checked($event) })"
+              />
+              <span>{{ i18n.t('worldModal.rows.hardcore') }}</span>
+            </label>
+            <label class="check">
+              <input
+                class="edit-commands"
+                type="checkbox"
+                [checked]="dr.allowCommands"
+                (change)="patchDraft({ allowCommands: checked($event) })"
+              />
+              <span>{{ i18n.t('worldModal.rows.commandsAllowed') }}</span>
+            </label>
+            @if (details()?.summary?.hasIcon) {
+              <div class="icon-reset">
+                <button class="btn small reset-icon" type="button" [disabled]="busy()" (click)="resetIcon()">
+                  {{ i18n.t('worldModal.edit.resetIcon') }}
+                </button>
+                <span>{{ i18n.t('worldModal.edit.resetIconHint') }}</span>
+              </div>
+            }
+          </section>
+        }
+
         @for (s of sections(); track s.title) {
           <section>
             <h3>{{ s.title }}</h3>
@@ -49,7 +124,37 @@
               @for (g of gameRules(); track g.name) {
                 <div class="rule">
                   <code>{{ g.name }}</code>
-                  <span class="badge" [class.ok]="g.value === 'true'" [class.danger]="g.value === 'false'">{{ g.value }}</span>
+                  @if (draft(); as dr) {
+                    @switch (ruleKind(g.value)) {
+                      @case ('boolean') {
+                        <input
+                          type="checkbox"
+                          [attr.aria-label]="g.name"
+                          [checked]="dr.gameRules[g.name] === 'true'"
+                          (change)="setRule(g.name, checked($event) ? 'true' : 'false')"
+                        />
+                      }
+                      @case ('number') {
+                        <input
+                          type="number"
+                          step="1"
+                          [attr.aria-label]="g.name"
+                          [value]="dr.gameRules[g.name]"
+                          (input)="setRule(g.name, value($event))"
+                        />
+                      }
+                      @default {
+                        <input
+                          type="text"
+                          [attr.aria-label]="g.name"
+                          [value]="dr.gameRules[g.name]"
+                          (input)="setRule(g.name, value($event))"
+                        />
+                      }
+                    }
+                  } @else {
+                    <span class="badge" [class.ok]="g.value === 'true'" [class.danger]="g.value === 'false'">{{ g.value }}</span>
+                  }
                 </div>
               }
             </div>
@@ -66,5 +171,25 @@
         </details>
       }
     </div>
+
+    @if (draft()) {
+      <footer class="edit-actions">
+        @if (editError(); as e) {
+          <div class="banner error">{{ e }}</div>
+        }
+        <div class="buttons">
+          <button class="btn cancel" type="button" [disabled]="busy()" (click)="toggleEditing()">
+            {{ i18n.t('worldModal.edit.cancel') }}
+          </button>
+          <button class="btn primary save" type="button" [disabled]="!canSave()" (click)="save()">
+            @if (busy()) {
+              <span class="spin"></span> {{ i18n.t('worldModal.edit.saving') }}
+            } @else {
+              {{ i18n.t('worldModal.edit.save') }}
+            }
+          </button>
+        </div>
+      </footer>
+    }
   </div>
 </div>

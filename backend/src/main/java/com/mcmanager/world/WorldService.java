@@ -4,15 +4,20 @@ import static com.mcmanager.common.Util.blank;
 import static com.mcmanager.common.Util.text;
 
 import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -21,20 +26,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mcmanager.common.ApiException;
 import com.mcmanager.settings.SettingsDto;
 import com.mcmanager.settings.SettingsService;
 import com.mcmanager.world.WorldDtos.PlayerInfo;
 import com.mcmanager.world.WorldDtos.Spawn;
 import com.mcmanager.world.WorldDtos.WorldDetails;
+import com.mcmanager.world.WorldDtos.WorldEdit;
 import com.mcmanager.world.WorldDtos.WorldSummary;
 
 @Service
 public class WorldService {
 
     private static final Logger log = LoggerFactory.getLogger(WorldService.class);
-    private static final String[] GAME_MODES = { "survival", "creative", "adventure", "spectator" };
-    private static final String[] DIFFICULTIES = { "peaceful", "easy", "normal", "hard" };
+    static final String[] GAME_MODES = { "survival", "creative", "adventure", "spectator" };
+    static final String[] DIFFICULTIES = { "peaceful", "easy", "normal", "hard" };
 
     private final SettingsService settings;
 
@@ -141,7 +150,7 @@ public class WorldService {
                 player == null ? null : playerInfo(player),
                 countFiles(dir.resolve("playerdata")),
                 dimensions(dir),
-                data.path("GameRules"));
+                gameRules(dir, data));
     }
 
     /** The full NBT tree of level.dat, for free-form viewing. */
@@ -160,6 +169,50 @@ public class WorldService {
             throw new ApiException(HttpStatus.NOT_FOUND, "No icon");
         }
         return icon;
+    }
+
+    // ------------------------------------------------------------------ editing
+
+    public WorldDetails edit(String folder, WorldEdit edit) {
+        Path dir = resolveWorld(folder);
+        whileWorldIsClosed(dir, () -> WorldEditor.apply(dir, edit));
+        return details(folder);
+    }
+
+    public WorldDetails resetIcon(String folder) {
+        Path dir = resolveWorld(folder);
+        whileWorldIsClosed(dir, () -> Files.deleteIfExists(dir.resolve("icon.png")));
+        return details(folder);
+    }
+
+    private interface WorldChange {
+        void run() throws IOException;
+    }
+
+    /** Minecraft holds a lock on session.lock while a world is open and would overwrite the change when saving. */
+    private static void whileWorldIsClosed(Path dir, WorldChange change) {
+        Path sessionLock = dir.resolve("session.lock");
+        try {
+            if (!Files.isRegularFile(sessionLock)) {
+                change.run();
+                return;
+            }
+            try (FileChannel channel = FileChannel.open(sessionLock, StandardOpenOption.WRITE);
+                    FileLock lock = channel.tryLock()) {
+                if (lock == null) {
+                    throw worldInUse();
+                }
+                change.run();
+            } catch (OverlappingFileLockException e) {
+                throw worldInUse();
+            }
+        } catch (IOException e) {
+            throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "Failed to change the world: " + e.getMessage());
+        }
+    }
+
+    private static ApiException worldInUse() {
+        return new ApiException(HttpStatus.CONFLICT, "This world is open in Minecraft. Close it first, then try again.");
     }
 
     // ------------------------------------------------------------------ field reading
@@ -226,6 +279,25 @@ public class WorldService {
             }
         }
         return s.isMissingNode() || s.isNull() ? null : s.asText();
+    }
+
+    /** Newer versions keep the rules in their own file, with booleans stored as bytes rather than "true"/"false". */
+    private static JsonNode gameRules(Path dir, JsonNode data) {
+        Path file = dir.resolve(WorldEditor.GAME_RULES_FILE);
+        if (Files.isRegularFile(file)) {
+            try {
+                Map<String, Object> rules = WorldEditor.gameRulesIn(Nbt.readDocument(file));
+                if (rules != null) {
+                    ObjectNode out = JsonNodeFactory.instance.objectNode();
+                    rules.forEach((name, tag) -> out.set(name,
+                            tag instanceof Byte b ? BooleanNode.valueOf(b != 0) : Nbt.toJson(tag)));
+                    return out;
+                }
+            } catch (IOException e) {
+                log.debug("{} not read: {}", file, e.getMessage());
+            }
+        }
+        return data.path("GameRules");
     }
 
     private static Spawn spawn(JsonNode data) {

@@ -4,12 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -149,5 +152,56 @@ class NbtTest {
     void aTruncatedFileIsRejected() throws Exception {
         Path file = NbtWriter.writeRaw(dir.resolve("t.dat"), 10, out -> out.writeByte(3));
         assertThatThrownBy(() -> Nbt.readGzipFile(file)).isInstanceOf(IOException.class);
+    }
+
+    // ---- lossless round trip
+
+    @Test
+    void aFileWrittenBackIsIdenticalTagForTag() throws Exception {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("byte", (byte) -5);
+        values.put("short", (short) 300);
+        values.put("int", 70000);
+        values.put("long", Long.MAX_VALUE);
+        values.put("float", 1.5f);
+        values.put("double", 2.25);
+        values.put("string", "héllo");
+        values.put("bytes", new byte[100]);
+        values.put("ints", new int[100]);
+        values.put("longs", new long[] { 1L, Long.MIN_VALUE });
+        values.put("list", new ArrayList<>(Collections.nCopies(600, 7)));
+        values.put("empty", List.of());
+        values.put("nested", Map.of("inner", List.of(Map.of("x", "y"))));
+        Path original = NbtWriter.write(dir.resolve("a.dat"), values);
+        Path copy = dir.resolve("b.dat");
+
+        Nbt.writeDocument(copy, Nbt.readDocument(original));
+
+        assertThat(gunzip(copy)).isEqualTo(gunzip(original));
+    }
+
+    @Test
+    void theRootNameIsKept() throws Exception {
+        Path copy = dir.resolve("b.dat");
+        Nbt.writeDocument(copy, new Nbt.Document("named", new LinkedHashMap<>()));
+
+        assertThat(Nbt.readDocument(copy).rootName()).isEqualTo("named");
+    }
+
+    @Test
+    void aNegativeArrayLengthIsRejected() throws Exception {
+        Path file = NbtWriter.writeRaw(dir.resolve("t.dat"), 10, out -> {
+            out.writeByte(11);
+            out.writeUTF("bad");
+            out.writeInt(-1);
+        });
+        assertThatThrownBy(() -> Nbt.readDocument(file)).isInstanceOf(IOException.class)
+                .hasMessageContaining("Invalid NBT array length");
+    }
+
+    private static byte[] gunzip(Path file) throws IOException {
+        try (InputStream in = new GZIPInputStream(Files.newInputStream(file))) {
+            return in.readAllBytes();
+        }
     }
 }
